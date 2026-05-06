@@ -61,6 +61,10 @@ func (u *HandlerUtility) SuccessRawJson(rawJson []byte) {
 	u.ResponseChan <- &Response{http.StatusOK, nil, nil, rawJson, "application/json"}
 }
 
+func (u *HandlerUtility) SuccessRawBytes(httpCode int, body []byte, contentType string) {
+	u.ResponseChan <- &Response{httpCode, nil, nil, body, contentType}
+}
+
 func (u *HandlerUtility) ResponseWithStatus(httpCode int, msg *gin.H) {
 	u.ResponseChan <- &Response{httpCode, msg, nil, nil, ""}
 }

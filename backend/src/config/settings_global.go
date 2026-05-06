@@ -15,6 +15,7 @@ const (
 	KeyEnableGravatar              = "enable_gravatar"
 	KeyCacheProfilePictures        = "cache_profile_pictures"
 	KeyEnableProfilePicturesUpload = "enable_profile_pictures_upload"
+	KeyPublicCalendarEnabled       = "public_calendar_enabled"
 )
 
 func AllDefaultGlobalSettings() []SettingsEntry {
@@ -26,6 +27,7 @@ func AllDefaultGlobalSettings() []SettingsEntry {
 		&EnableGravatar{},
 		&CacheProfilePictures{},
 		&EnableProfilePicturesUpload{},
+		&PublicCalendarEnabled{},
 	}
 
 	for _, setting := range settings {
@@ -51,6 +53,8 @@ func GetMatchingGlobalSettingStruct(key string) (SettingsEntry, *errors.ErrorTra
 		return &CacheProfilePictures{}, nil
 	case KeyEnableProfilePicturesUpload:
 		return &EnableProfilePicturesUpload{}, nil
+	case KeyPublicCalendarEnabled:
+		return &PublicCalendarEnabled{}, nil
 	default:
 		return nil, errors.New().Status(http.StatusBadRequest).
 			Append(errors.LvlWordy, "Invalid setting key: %s", key).
@@ -230,6 +234,25 @@ func (entry *EnableProfilePicturesUpload) MarshalJSON() ([]byte, error) {
 	return common.MarshalBool(entry.Enabled), nil
 }
 func (entry *EnableProfilePicturesUpload) UnmarshalJSON(data []byte) (err error) {
+	entry.Enabled, err = common.UnmarshalBool(data)
+	return err
+}
+
+// Whether the aggregated public read-only calendar feed is exposed at /public (default off).
+type PublicCalendarEnabled struct {
+	Enabled bool `json:"value"`
+}
+
+func (entry *PublicCalendarEnabled) Key() string {
+	return KeyPublicCalendarEnabled
+}
+func (entry *PublicCalendarEnabled) Default() {
+	entry.Enabled = false
+}
+func (entry *PublicCalendarEnabled) MarshalJSON() ([]byte, error) {
+	return common.MarshalBool(entry.Enabled), nil
+}
+func (entry *PublicCalendarEnabled) UnmarshalJSON(data []byte) (err error) {
 	entry.Enabled, err = common.UnmarshalBool(data)
 	return err
 }

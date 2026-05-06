@@ -1,11 +1,15 @@
 <script lang="ts">
+  import { browser } from "$app/environment";
   import type { Settings } from "../../../lib/client/data/settings.svelte";
-  import { fetchResponse } from "../../../lib/client/net";
+  import { fetchJson, fetchResponse } from "../../../lib/client/net";
+  import { queueNotification } from "../../../lib/client/notifications";
   import { ColorKeys } from "../../../types/colors";
   import { GlobalSettingKeys } from "../../../types/settings";
   import SelectButtons from "../../forms/SelectButtons.svelte";
   import ToggleInput from "../../forms/ToggleInput.svelte";
   import Button from "../../interactive/Button.svelte";
+  import Paragraph from "../../layout/Paragraph.svelte";
+  import SectionTitle from "../../layout/SectionTitle.svelte";
 
   interface Props {
     settings: Settings;
@@ -30,7 +34,65 @@
       });
     });
   }
+
+  let publicCalEnabled = $state(false);
+  let publicCalLoaded = $state(false);
+
+  $effect(() => {
+    if (!browser || !settings.userData.admin) {
+      return;
+    }
+    fetchJson<{ enabled: boolean }>("/api/admin/public-calendar")
+      .then((d) => {
+        publicCalEnabled = d.enabled;
+        publicCalLoaded = true;
+      })
+      .catch(() => {
+        publicCalLoaded = true;
+      });
+  });
+
+  async function onPublicCalendarToggle(next: boolean) {
+    try {
+      await fetchResponse("/api/admin/public-calendar", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next }),
+      });
+    } catch {
+      publicCalEnabled = !next;
+      queueNotification(ColorKeys.Danger, "Impossible de mettre à jour la publication publique.");
+    }
+  }
+
+  let publicCalendarUrl = $derived(
+    typeof window !== "undefined" ? `${window.location.origin}/public` : "",
+  );
+
+  async function copyPublicCalendarUrl() {
+    const url = typeof window !== "undefined" ? `${window.location.origin}/public` : "";
+    if (!url || !navigator.clipboard?.writeText) return;
+    await navigator.clipboard.writeText(url);
+  }
 </script>
+
+<SectionTitle title="Publication publique" />
+<Paragraph>
+  Activer cette option rend TOUS les événements de TOUS les utilisateurs visibles sans authentification à l’URL publique ci-dessous.
+</Paragraph>
+<ToggleInput
+  name="public_calendar_feed"
+  description="Activer la publication publique du calendrier global"
+  bind:value={publicCalEnabled}
+  editable={publicCalLoaded}
+  onChange={onPublicCalendarToggle}
+/>
+{#if publicCalLoaded && publicCalEnabled && publicCalendarUrl}
+  <Paragraph>
+    URL publique : <strong>{publicCalendarUrl}</strong>
+    <Button color={ColorKeys.Primary} onClick={copyPublicCalendarUrl}>Copier</Button>
+  </Paragraph>
+{/if}
 
 <ToggleInput
   name={GlobalSettingKeys.RegistrationEnabled}

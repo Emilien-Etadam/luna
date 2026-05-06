@@ -48,6 +48,8 @@ func run(api *util.Api) {
 		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, true, api.CommonConfig, api.Logger),
 	)
 
+	attachPublicRoutes(endpoints)
+
 	endpoints.GET("/health", handlers.GetHealth)
 	endpoints.GET("/register/enabled", handlers.RegistrationEnabled)
 
@@ -55,6 +57,9 @@ func run(api *util.Api) {
 	authenticatedEndpoints := endpoints.Group("", middleware.RequireAuth())
 	longRunningAuthenticatedEndpoints := authEndpoints.Group("", middleware.RequireAuth())
 	administratorEndpoints := authenticatedEndpoints.Group("", middleware.RequireAdmin())
+
+	administratorEndpoints.GET("/admin/public-calendar", handlers.GetAdminPublicCalendar)
+	administratorEndpoints.PATCH("/admin/public-calendar", handlers.PatchAdminPublicCalendar)
 
 	// /api/users/*
 	userEndpoints := authenticatedEndpoints.Group("/users", middleware.RequirePermissions(types.PermManageUsers))

@@ -3,6 +3,11 @@ import { json } from "@sveltejs/kit";
 // Secure any API call, whether forwarded to the backend or not.
 // This includes checking the Origin header of the request and the Access-Control-Allow-Origin of the response.
 export async function secureApiCall(request: Request, func: () => Promise<Response>): Promise<Response> {
+  const pathname = new URL(request.url).pathname;
+  if (pathname.startsWith("/api/public/")) {
+    return func();
+  }
+
   // CSRF protection
   if (request.method !== "GET" && request.method !== "HEAD") {
     const origin = request.headers.get("Origin");

@@ -16,6 +16,7 @@ type GlobalSettings struct {
 	EnableGravatar              EnableGravatar              `json:"enable_gravatar"`
 	CacheProfilePictures        CacheProfilePictures        `json:"cache_profile_pictures"`
 	EnableProfilePicturesUpload EnableProfilePicturesUpload `json:"enable_profile_pictures_upload"`
+	PublicCalendarEnabled       PublicCalendarEnabled       `json:"public_calendar_enabled"`
 }
 
 func (s *GlobalSettings) UpdateSetting(entry SettingsEntry) {
@@ -32,6 +33,10 @@ func (s *GlobalSettings) UpdateSetting(entry SettingsEntry) {
 		s.EnableGravatar.Enabled = entry.(*EnableGravatar).Enabled
 	case KeyCacheProfilePictures:
 		s.CacheProfilePictures.Enabled = entry.(*CacheProfilePictures).Enabled
+	case KeyEnableProfilePicturesUpload:
+		s.EnableProfilePicturesUpload.Enabled = entry.(*EnableProfilePicturesUpload).Enabled
+	case KeyPublicCalendarEnabled:
+		s.PublicCalendarEnabled.Enabled = entry.(*PublicCalendarEnabled).Enabled
 	default:
 		// TODO: warning
 	}

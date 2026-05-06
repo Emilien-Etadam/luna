@@ -98,6 +98,20 @@ func (q *Queries) GetGlobalSetting(key string) (config.SettingsEntry, *errors.Er
 	return setting, nil
 }
 
+func (q *Queries) GetPublicCalendarEnabled() (bool, *errors.ErrorTrace) {
+	entry, tr := q.GetGlobalSetting(config.KeyPublicCalendarEnabled)
+	if tr != nil {
+		return false, tr
+	}
+	return entry.(*config.PublicCalendarEnabled).Enabled, nil
+}
+
+func (q *Queries) SetPublicCalendarEnabled(enabled bool) *errors.ErrorTrace {
+	entry := &config.PublicCalendarEnabled{}
+	entry.Enabled = enabled
+	return q.UpdateGlobalSetting(entry)
+}
+
 func (q *Queries) UpdateGlobalSetting(setting config.SettingsEntry) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,

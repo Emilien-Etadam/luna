@@ -13,6 +13,7 @@ import (
 	"luna-backend/errors"
 	"luna-backend/types"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -418,5 +419,54 @@ func DynamicThrottle(throttle *util.Throttle) gin.HandlerFunc {
 			// Increment the number of failures
 			throttle.RecordFailedAttempt(ip)
 		}
+	}
+}
+
+const publicRequestsPerMinute = 60
+
+type publicMinuteLimiter struct {
+	mu   sync.Mutex
+	hits map[string][]time.Time
+}
+
+func newPublicMinuteLimiter() *publicMinuteLimiter {
+	return &publicMinuteLimiter{
+		hits: make(map[string][]time.Time),
+	}
+}
+
+func (l *publicMinuteLimiter) allow(ip string) bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	now := time.Now()
+	cutoff := now.Add(-time.Minute)
+	prev := l.hits[ip]
+	var kept []time.Time
+	for _, t := range prev {
+		if t.After(cutoff) {
+			kept = append(kept, t)
+		}
+	}
+	if len(kept) >= publicRequestsPerMinute {
+		l.hits[ip] = kept
+		return false
+	}
+	kept = append(kept, now)
+	l.hits[ip] = kept
+	return true
+}
+
+var defaultPublicMinuteLimiter = newPublicMinuteLimiter()
+
+// PublicMinuteRateLimit limits GET/HEAD traffic on /api/public/* to publicRequestsPerMinute per IP per rolling minute.
+func PublicMinuteRateLimit() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ip := util.DetermineClientAddress(c).String()
+		if !defaultPublicMinuteLimiter.allow(ip) {
+			c.AbortWithStatus(http.StatusTooManyRequests)
+			return
+		}
+		c.Next()
 	}
 }

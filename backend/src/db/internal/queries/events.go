@@ -10,7 +10,9 @@ import (
 	"luna-backend/types"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -136,6 +138,45 @@ func (q *Queries) OverrideEvents(events []types.Event) ([]types.Event, *errors.E
 		return nil, err.
 			Append(errors.LvlWordy, "Could not cache events").
 			Append(errors.LvlPlain, "Database error")
+	}
+
+	return events, nil
+}
+
+// MergeEventOverridesReadOnly applies title/description/color overrides from the database without writing cache rows.
+func (q *Queries) MergeEventOverridesReadOnly(events []types.Event) ([]types.Event, *errors.ErrorTrace) {
+	if len(events) == 0 {
+		return events, nil
+	}
+
+	eventMap := map[types.ID]types.Event{}
+	for _, event := range events {
+		eventMap[event.GetId()] = event
+	}
+
+	dbEvents, err := q.getEventEntries(events)
+	if err != nil {
+		return nil, err.
+			Append(errors.LvlWordy, "Could not get cached events").
+			Append(errors.LvlPlain, "Database error")
+	}
+
+	for _, dbEvent := range dbEvents {
+		if event, ok := eventMap[dbEvent.Id]; ok {
+			if !dbEvent.Overridden {
+				continue
+			}
+			event.SetOverridden(true)
+			if dbEvent.Title != "" {
+				event.SetName(dbEvent.Title)
+			}
+			if dbEvent.Description != "" {
+				event.SetDesc(dbEvent.Description)
+			}
+			if dbEvent.Color != nil {
+				event.SetColor(types.ColorFromBytes(dbEvent.Color))
+			}
+		}
 	}
 
 	return events, nil
@@ -356,4 +397,64 @@ func (q *Queries) DeleteEventOverrides(eventId types.ID) *errors.ErrorTrace {
 	}
 
 	return nil
+}
+
+// GetAllEventsAllCalendars returns expanded occurrences for every calendar in the system within [from, to].
+func (q *Queries) GetAllEventsAllCalendars(from, to time.Time, ctx context.Context, cfg *config.CommonConfig) ([]types.Event, *errors.ErrorTrace) {
+	rows, err := q.Tx.Query(
+		q.Context,
+		`
+		SELECT calendars.id, sources.userid
+		FROM calendars
+		JOIN sources ON calendars.source = sources.id
+		`,
+	)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not list calendars for public feed")
+	}
+	defer rows.Close()
+
+	var collected []types.Event
+	for rows.Next() {
+		var calUUID uuid.UUID
+		var userUUID uuid.UUID
+		if err := rows.Scan(&calUUID, &userUUID); err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlWordy, "Could not scan calendar row for public feed")
+		}
+		calId := types.IdFromUuid(calUUID)
+		userId := types.IdFromUuid(userUUID)
+
+		calendar, tr := q.GetCalendar(userId, calId, ctx, cfg)
+		if tr != nil {
+			q.Logger.Warn(tr.Serialize(errors.LvlDebug))
+			continue
+		}
+
+		eventsFromCal, tr := calendar.GetEvents(from, to, q)
+		if tr != nil {
+			q.Logger.Warn(tr.Serialize(errors.LvlDebug))
+			continue
+		}
+
+		for _, event := range eventsFromCal {
+			expanded, tr := types.ExpandRecurrence(event, &from, &to)
+			if tr != nil {
+				q.Logger.Warn(tr.Serialize(errors.LvlDebug))
+				continue
+			}
+			collected = append(collected, expanded...)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not iterate calendars for public feed")
+	}
+
+	return q.MergeEventOverridesReadOnly(collected)
 }

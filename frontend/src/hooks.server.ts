@@ -6,6 +6,11 @@ import { loginPaths, unprivilegedPaths } from "./lib/common/paths";
 import { encodeRedirectUrl } from "./lib/common/url";
 
 export const handle: Handle = async ({ event, resolve }) => {
+  const pathname = event.url.pathname;
+  if (pathname === "/public" || pathname.startsWith("/api/public/")) {
+    return resolve(event);
+  }
+
   const tokenPresent = event.cookies.get("tokenPresent");
   const currentUrl = new URL(event.request.url)
 
