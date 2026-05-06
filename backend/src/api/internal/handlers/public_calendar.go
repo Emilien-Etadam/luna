@@ -16,7 +16,7 @@ import (
 func HeadPublicCalendarICS(c *gin.Context) {
 	u := util.GetUtil(c)
 	ip := util.DetermineClientAddress(c).String()
-	u.Logger.Infof("public calendar HEAD ip=%s ua=%s", ip, sanitizeUserAgent(c.Request.User-Agent()))
+	u.Logger.Infof("public calendar HEAD ip=%s ua=%s", ip, sanitizeUserAgent(c.Request.UserAgent()))
 
 	enabled, tr := u.Tx.Queries().GetPublicCalendarEnabled()
 	if tr != nil {
@@ -35,7 +35,7 @@ func HeadPublicCalendarICS(c *gin.Context) {
 func GetPublicCalendarICS(c *gin.Context) {
 	u := util.GetUtil(c)
 	ip := util.DetermineClientAddress(c).String()
-	u.Logger.Infof("public calendar ICS ip=%s ua=%s", ip, sanitizeUserAgent(c.Request.User-Agent()))
+	u.Logger.Infof("public calendar ICS ip=%s ua=%s", ip, sanitizeUserAgent(c.Request.UserAgent()))
 
 	enabled, tr := u.Tx.Queries().GetPublicCalendarEnabled()
 	if tr != nil {

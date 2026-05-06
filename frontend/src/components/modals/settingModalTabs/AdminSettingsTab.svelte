@@ -42,8 +42,8 @@
     if (!browser || !settings.userData.admin) {
       return;
     }
-    fetchJson<{ enabled: boolean }>("/api/admin/public-calendar")
-      .then((d) => {
+    fetchJson("/api/admin/public-calendar")
+      .then((d: { enabled: boolean }) => {
         publicCalEnabled = d.enabled;
         publicCalLoaded = true;
       })
@@ -90,7 +90,7 @@
 {#if publicCalLoaded && publicCalEnabled && publicCalendarUrl}
   <Paragraph>
     URL publique : <strong>{publicCalendarUrl}</strong>
-    <Button color={ColorKeys.Primary} onClick={copyPublicCalendarUrl}>Copier</Button>
+    <Button color={ColorKeys.Accent} onClick={copyPublicCalendarUrl}>Copier</Button>
   </Paragraph>
 {/if}
 
