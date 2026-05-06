@@ -15,8 +15,15 @@ import (
 
 func HeadPublicCalendarICS(c *gin.Context) {
 	u := util.GetUtil(c)
-	ip := util.DetermineClientAddress(c).String()
+	ip := u.GinContext.ClientIP()
 	u.Logger.Infof("public calendar HEAD ip=%s ua=%s", ip, sanitizeUserAgent(c.Request.UserAgent()))
+
+	now := time.Now()
+	if cachedPublicICSFresh(now) {
+		u.GinContext.Header("Cache-Control", "public, max-age=300")
+		u.SuccessRawBytes(http.StatusOK, []byte{}, "text/calendar; charset=utf-8")
+		return
+	}
 
 	enabled, tr := u.Tx.Queries().GetPublicCalendarEnabled()
 	if tr != nil {
@@ -34,7 +41,7 @@ func HeadPublicCalendarICS(c *gin.Context) {
 
 func GetPublicCalendarICS(c *gin.Context) {
 	u := util.GetUtil(c)
-	ip := util.DetermineClientAddress(c).String()
+	ip := u.GinContext.ClientIP()
 	u.Logger.Infof("public calendar ICS ip=%s ua=%s", ip, sanitizeUserAgent(c.Request.UserAgent()))
 
 	enabled, tr := u.Tx.Queries().GetPublicCalendarEnabled()

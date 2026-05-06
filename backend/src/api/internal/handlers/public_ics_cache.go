@@ -27,6 +27,16 @@ func getCachedPublicICSBody(now time.Time) ([]byte, bool) {
 	return publicICSBodyCache.body, true
 }
 
+// cachedPublicICSFresh is true when a GET recently stored a body still within TTL (used to skip DB on HEAD).
+func cachedPublicICSFresh(now time.Time) bool {
+	publicICSBodyCache.mu.RLock()
+	defer publicICSBodyCache.mu.RUnlock()
+	if !publicICSBodyCache.valid {
+		return false
+	}
+	return now.Sub(publicICSBodyCache.builtAt) < publicICSCacheTTL
+}
+
 func setCachedPublicICSBody(body []byte, now time.Time) {
 	publicICSBodyCache.mu.Lock()
 	defer publicICSBodyCache.mu.Unlock()
