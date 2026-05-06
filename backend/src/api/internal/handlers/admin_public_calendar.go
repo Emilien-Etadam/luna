@@ -39,5 +39,7 @@ func PatchAdminPublicCalendar(c *gin.Context) {
 		return
 	}
 
+	InvalidatePublicICSCache()
+
 	u.Success(&gin.H{"enabled": body.Enabled})
 }

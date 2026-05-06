@@ -29,26 +29,30 @@ func run(api *util.Api) {
 
 	// /api/* (with no transactions)
 	noDatabaseEndpoints := rawEndpoints.Group("",
-		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, false, api.CommonConfig, api.Logger),
+		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, false, false, api.CommonConfig, api.Logger),
 	)
 
 	noDatabaseEndpoints.GET("/version", handlers.GetVersion)
 
 	// /api/* (long-running authentication)
 	authEndpoints := rawEndpoints.Group("",
-		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_AUTHENTICATION, api.Db, true, api.CommonConfig, api.Logger),
+		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_AUTHENTICATION, api.Db, true, false, api.CommonConfig, api.Logger),
 		middleware.DynamicThrottle(api.Throttle),
 	)
 
 	authEndpoints.POST("/login", handlers.Login)
 	authEndpoints.POST("/register", handlers.Register)
 
+	// /api/public/* read-only SQL transaction (no write locks for publication feed)
+	publicReadOnlyEndpoints := rawEndpoints.Group("",
+		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, true, true, api.CommonConfig, api.Logger),
+	)
+	attachPublicRoutes(publicReadOnlyEndpoints)
+
 	// /api/* the rest
 	endpoints := rawEndpoints.Group("",
-		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, true, api.CommonConfig, api.Logger),
+		middleware.RequestSetup(api.CommonConfig.Env.REQUEST_TIMEOUT_DEFAULT, api.Db, true, false, api.CommonConfig, api.Logger),
 	)
-
-	attachPublicRoutes(endpoints)
 
 	endpoints.GET("/health", handlers.GetHealth)
 	endpoints.GET("/register/enabled", handlers.RegistrationEnabled)

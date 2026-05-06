@@ -21,7 +21,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func RequestSetup(timeout time.Duration, database *db.Database, withTransaction bool, config *config.CommonConfig, logger *logrus.Entry) gin.HandlerFunc {
+func RequestSetup(timeout time.Duration, database *db.Database, withTransaction bool, readOnlyTransaction bool, config *config.CommonConfig, logger *logrus.Entry) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		responseStatus := http.StatusOK
 		var responseRaw []byte
@@ -93,7 +93,11 @@ func RequestSetup(timeout time.Duration, database *db.Database, withTransaction 
 		// If the request uses the database at all, we create a transaction for it.
 		var tx *db.Transaction
 		if withTransaction {
-			tx, responseErr = database.BeginTransaction(dbCtx)
+			if readOnlyTransaction {
+				tx, responseErr = database.BeginReadOnlyTransaction(dbCtx)
+			} else {
+				tx, responseErr = database.BeginTransaction(dbCtx)
+			}
 			if responseErr != nil {
 				return
 			}
@@ -435,6 +439,30 @@ func newPublicMinuteLimiter() *publicMinuteLimiter {
 	}
 }
 
+func (l *publicMinuteLimiter) cleanStale() {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	cutoff := time.Now().Add(-5 * time.Minute)
+	for ip, times := range l.hits {
+		var kept []time.Time
+		for _, t := range times {
+			if t.After(cutoff) {
+				kept = append(kept, t)
+			}
+		}
+		if len(kept) == 0 {
+			delete(l.hits, ip)
+		} else {
+			l.hits[ip] = kept
+		}
+	}
+}
+
+// CleanStalePublicMinuteLimiter drops rate-limit bookkeeping older than five minutes (cron).
+func CleanStalePublicMinuteLimiter() {
+	defaultPublicMinuteLimiter.cleanStale()
+}
+
 func (l *publicMinuteLimiter) allow(ip string) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -462,7 +490,7 @@ var defaultPublicMinuteLimiter = newPublicMinuteLimiter()
 // PublicMinuteRateLimit limits GET/HEAD traffic on /api/public/* to publicRequestsPerMinute per IP per rolling minute.
 func PublicMinuteRateLimit() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ip := util.DetermineClientAddress(c).String()
+		ip := c.ClientIP()
 		if !defaultPublicMinuteLimiter.allow(ip) {
 			c.AbortWithStatus(http.StatusTooManyRequests)
 			return

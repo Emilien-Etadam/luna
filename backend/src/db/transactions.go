@@ -24,6 +24,41 @@ type Transaction struct {
 	migrations *types.MigrationQueries
 }
 
+func (db *Database) BeginReadOnlyTransaction(ctx context.Context) (*Transaction, *errors.ErrorTrace) {
+	tx, err := db.pool.BeginTx(ctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
+
+	var errMsg string
+	if err != nil {
+		errMsg = err.Error()
+	}
+	switch {
+	case err == nil:
+		break
+	case strings.Contains(errMsg, "connection refused"):
+		return nil, errors.New().Status(http.StatusServiceUnavailable).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "The database is not reachable")
+	case strings.Contains(errMsg, "authentication failed"):
+		return nil, errors.New().Status(http.StatusServiceUnavailable).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Wrong database credentials").
+			AltStr(errors.LvlPlain, "Database error")
+	default:
+		return nil, errors.New().Status(http.StatusServiceUnavailable).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not begin read-only transaction").
+			AltStr(errors.LvlPlain, "Database error")
+	}
+
+	transaction := &Transaction{
+		db:      db,
+		context: ctx,
+		tx:      tx,
+	}
+
+	return transaction, nil
+}
+
 func (db *Database) BeginTransaction(ctx context.Context) (*Transaction, *errors.ErrorTrace) {
 	tx, err := db.pool.Begin(ctx)
 

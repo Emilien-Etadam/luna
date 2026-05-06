@@ -1,6 +1,7 @@
 package tasks
 
 import (
+	"luna-backend/api"
 	"luna-backend/config"
 	"luna-backend/db"
 	"luna-backend/errors"
@@ -15,6 +16,13 @@ type ThrottleInterface interface {
 func DeleteStaleRequestThrottleEntries(throttle ThrottleInterface) func(tx *db.Transaction, logger *logrus.Entry, config *config.CommonConfig) *errors.ErrorTrace {
 	return func(tx *db.Transaction, logger *logrus.Entry, config *config.CommonConfig) *errors.ErrorTrace {
 		throttle.CleanStaleEntries()
+		return nil
+	}
+}
+
+func DeleteStalePublicRateLimitEntries() func(tx *db.Transaction, logger *logrus.Entry, config *config.CommonConfig) *errors.ErrorTrace {
+	return func(tx *db.Transaction, logger *logrus.Entry, config *config.CommonConfig) *errors.ErrorTrace {
+		api.CleanStalePublicMinuteLimiter()
 		return nil
 	}
 }

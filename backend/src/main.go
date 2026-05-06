@@ -195,6 +195,7 @@ func main() {
 	c.AddFunc("0 * * * *", createTask("DeleteExpiredRegistrationInvites", tasks.DeleteExpiredRegistrationInvites, db, cronLogger, commonConfig))
 	c.AddFunc("0 * * * *", createTask("DeleteExpiredOauthAuthorizationRequests", tasks.DeleteExpiredOauthAuthorizationRequests, db, cronLogger, commonConfig))
 	c.AddFunc("*/10 * * * *", createTask("DeleteStaleRequestThrottleEntries", tasks.DeleteStaleRequestThrottleEntries(api.Throttle), db, cronLogger, commonConfig))
+	c.AddFunc("*/10 * * * *", createTask("DeleteStalePublicRateLimitEntries", tasks.DeleteStalePublicRateLimitEntries(), db, cronLogger, commonConfig))
 	c.AddFunc("*/10 * * * *", createTask("DeleteStaleMemoryCacheEntries", tasks.ClearStaleCache, db, cronLogger, commonConfig))
 
 	// Token invalidation service

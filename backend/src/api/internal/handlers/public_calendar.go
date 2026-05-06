@@ -48,6 +48,12 @@ func GetPublicCalendarICS(c *gin.Context) {
 	}
 
 	now := time.Now()
+	if cached, ok := getCachedPublicICSBody(now); ok {
+		u.GinContext.Header("Cache-Control", "public, max-age=300")
+		u.SuccessRawBytes(http.StatusOK, cached, "text/calendar; charset=utf-8")
+		return
+	}
+
 	from := now.AddDate(0, -6, 0)
 	to := now.AddDate(1, 0, 0)
 
@@ -64,6 +70,8 @@ func GetPublicCalendarICS(c *gin.Context) {
 			Append(errors.LvlPlain, "Could not build calendar"))
 		return
 	}
+
+	setCachedPublicICSBody(body, now)
 
 	u.GinContext.Header("Cache-Control", "public, max-age=300")
 	u.SuccessRawBytes(http.StatusOK, body, "text/calendar; charset=utf-8")
