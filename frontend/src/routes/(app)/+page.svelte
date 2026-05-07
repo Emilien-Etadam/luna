@@ -241,15 +241,32 @@
     const end = new Date(range.end);
     end.setHours(23, 59, 59, 999);
 
+    const todayMidnight = new Date(today);
+    todayMidnight.setHours(0, 0, 0, 0);
+
+    const isCurrentMonthShown =
+      view === "agenda" &&
+      date.getFullYear() === todayMidnight.getFullYear() &&
+      date.getMonth() === todayMidnight.getMonth();
+
+    const cutoff = isCurrentMonthShown ? todayMidnight : start;
+
     const inRangeEvents = repository.events
-      .filter((event) => event.date.end.getTime() > start.getTime() && event.date.start.getTime() <= end.getTime())
+      .filter((event) => event.date.end.getTime() > cutoff.getTime() && event.date.start.getTime() <= end.getTime())
       .sort(compareEventsByStartDate);
 
     const byDay = new Map<string, { date: Date, events: EventModel[] }>();
+
+    if (isCurrentMonthShown) {
+      const key = localDayKey(todayMidnight);
+      byDay.set(key, { date: new Date(todayMidnight), events: [] });
+    }
+
     for (const event of inRangeEvents) {
       const day = new Date(event.date.start);
       day.setHours(0, 0, 0, 0);
-      const key = day.toISOString().split("T")[0];
+      if (day.getTime() < cutoff.getTime()) day.setTime(cutoff.getTime());
+      const key = localDayKey(day);
       if (!byDay.has(key)) byDay.set(key, { date: day, events: [] });
       byDay.get(key)?.events.push(event);
     }
@@ -258,15 +275,27 @@
   });
 
   const calendarGranularity = $derived(view === "agenda" ? "month" : view);
-  const todayKey = $derived(new Date().toISOString().split("T")[0]);
+  function localDayKey(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+  const todayKey = $derived(localDayKey(today));
   let agendaContainer: HTMLElement | null = $state(null);
 
   $effect(() => {
     if (view !== "agenda" || agendaDays.length === 0) return;
-    setTimeout(() => {
-      const todayRow = agendaContainer?.querySelector<HTMLElement>("[data-agenda-today='true']");
-      todayRow?.scrollIntoView({ block: "start", behavior: "auto" });
-    }, 0);
+    const container = agendaContainer;
+    if (!container) return;
+    requestAnimationFrame(() => {
+      const todayRow = container.querySelector<HTMLElement>("[data-agenda-today='true']");
+      if (todayRow) {
+        container.scrollTop = todayRow.offsetTop - container.offsetTop;
+      } else {
+        container.scrollTop = 0;
+      }
+    });
   });
 
   function openAgendaEvent(event: EventModel) {
@@ -472,6 +501,7 @@
   }
 
   section.agenda {
+    position: relative;
     height: 100%;
     overflow-y: auto;
     padding: 0;
@@ -657,7 +687,7 @@
         {#each agendaDays as day (day.date.getTime())}
           <div
             class="agendaDay"
-            data-agenda-today={day.date.toISOString().split("T")[0] === todayKey ? "true" : "false"}
+            data-agenda-today={localDayKey(day.date) === todayKey ? "true" : "false"}
           >
             <h3 class="agendaDate">{day.date.toLocaleDateString([], { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</h3>
             {#each day.events as event (event.id + event.date.start.getTime())}
