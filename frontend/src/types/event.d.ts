@@ -13,6 +13,7 @@ type EventModel = {
   overridden: boolean;
   can_edit: boolean;
   can_delete: boolean;
+  participant_colors?: string[];
 };
 
 type EventModelChanges = {

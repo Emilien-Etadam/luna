@@ -65,6 +65,13 @@
   let isFirstDisplay = $derived(isFirstDay || isEventStart);
 
   let isBackgroundDark: boolean = $derived(event ? isDark(GetEventRGB(event)) : false);
+  let participantColors = $derived.by(() => {
+    if (!event) return [];
+    const own = GetEventColor(event);
+    const colors = new Set(event.participant_colors || []);
+    if (own) colors.add(own);
+    return Array.from(colors);
+  });
 
   function mouseEnter() {
     if (event == null) return;
@@ -182,6 +189,12 @@
     display: flex;
     align-items: center;
   }
+  span.participants {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
 
   div.onlyCircle {
     background-color: transparent !important;
@@ -231,6 +244,13 @@
     <span class="name">
       {event.name}
     </span>
+    {#if !showOnlyCircle && participantColors.length > 1}
+      <span class="participants">
+        {#each participantColors as color (color)}
+          <ColorCircle color={color} size="small" />
+        {/each}
+      </span>
+    {/if}
     {#if (event.desc && event.desc != "")}
       <span class="icons">
         <TextIcon size={12}/>

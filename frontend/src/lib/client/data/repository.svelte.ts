@@ -226,10 +226,36 @@ export class Repository {
   }
 
   private compileEventsTimeout: (ReturnType<typeof setTimeout> | undefined) = undefined;
+  private mergePublicDuplicateEvents(events: EventModel[]): EventModel[] {
+    const byKey = new Map<string, EventModel>();
+    for (const event of events) {
+      const key = [
+        event.name || "",
+        event.date.start.toISOString(),
+        event.date.end.toISOString(),
+        event.date.allDay ? "1" : "0",
+      ].join("|");
+
+      const existing = byKey.get(key);
+      const ownColor = event.color || null;
+      if (!existing) {
+        byKey.set(key, {
+          ...event,
+          participant_colors: ownColor ? [ownColor] : [],
+        });
+        continue;
+      }
+
+      const colors = new Set(existing.participant_colors || []);
+      if (ownColor) colors.add(ownColor);
+      existing.participant_colors = Array.from(colors);
+    }
+    return Array.from(byKey.values());
+  }
   private compileEvents(startMonth: number, endMonth: number) {
     clearTimeout(this.compileEventsTimeout);
     this.compileEventsTimeout = setTimeout(async () => {
-      this.events = [ ...new Map(
+      const visibleEvents = [ ...new Map(
         Array.from(this.eventsCache.entries())
         .filter(x => !this.metadata.hiddenCalendars.has(x[0]) && x[1] != null) // Event must be visible
         .map(x => Array.from(x[1].entries()))
@@ -242,6 +268,9 @@ export class Repository {
         .filter(x => x != null) // Event must exist
         .map(x => [x.id, x])
       ).values()];
+      this.events = this.isPublicReadOnly()
+        ? this.mergePublicDuplicateEvents(visibleEvents)
+        : visibleEvents;
     }, this.spoolerDelay)
   }
   public async recalculateEvents(calendarThatBecameVisible: (string | null) = null) {
