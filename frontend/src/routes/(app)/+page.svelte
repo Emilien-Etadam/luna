@@ -12,7 +12,6 @@
   import MonthSelection from "../../components/interactive/MonthSelection.svelte";
   import SourceEntry from "../../components/calendar/SourceEntry.svelte";
   import SourceModal from "../../components/modals/SourceModal.svelte";
-  import Title from "../../components/layout/Title.svelte";
 
   import { afterNavigate, beforeNavigate } from "$app/navigation";
   import { browser } from "$app/environment";
@@ -263,10 +262,10 @@
   let agendaContainer: HTMLElement | null = $state(null);
 
   $effect(() => {
-    if (view !== "agenda") return;
+    if (view !== "agenda" || agendaDays.length === 0) return;
     setTimeout(() => {
       const todayRow = agendaContainer?.querySelector<HTMLElement>("[data-agenda-today='true']");
-      todayRow?.scrollIntoView({ block: "start", behavior: "smooth" });
+      todayRow?.scrollIntoView({ block: "start", behavior: "auto" });
     }, 0);
   });
 
@@ -279,6 +278,13 @@
       e.preventDefault();
       openAgendaEvent(event);
     }
+  }
+
+  function agendaParticipantColors(event: EventModel): string[] {
+    const colors = new Set(event.participant_colors || []);
+    const own = GetEventColor(event);
+    if (own) colors.add(own);
+    return Array.from(colors);
   }
 </script>
 
@@ -485,7 +491,8 @@
   span.agendaTime {
     color: colors.$foregroundSecondary;
     font-family: text.$fontFamilyTime;
-    font-size: text.$fontSizeSmall;
+    font-size: text.$fontSize;
+    font-weight: text.$fontWeightSemiBold;
   }
 
   span.agendaName {
@@ -531,8 +538,6 @@
   </nav>
 
   <aside class="sidebar">
-    <Title>Luna</Title>
-
     {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
       <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
     {/if}
@@ -630,7 +635,9 @@
                   {/if}
                 </span>
                 <span class="agendaName">
-                  <span class="eventDot" style="background-color: {GetEventColor(event)}"></span>
+                  {#each agendaParticipantColors(event) as color (color)}
+                    <span class="eventDot" style="background-color: {color}"></span>
+                  {/each}
                   {event.name}
                 </span>
               </div>

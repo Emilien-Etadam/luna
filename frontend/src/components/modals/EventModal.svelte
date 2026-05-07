@@ -129,6 +129,16 @@
       .map(calendar => ({ value: calendar.id, name: calendar.name }))
   );
 
+  const meetingLinks = $derived.by(() => {
+    if (!event?.desc) return [];
+    const matches = event.desc.match(/https?:\/\/[^\s)]+/gi) || [];
+    const deduped = Array.from(new Set(matches));
+    return deduped.filter((url) => {
+      const lowered = url.toLowerCase();
+      return lowered.includes("zoom.us") || lowered.includes("teams.microsoft.com");
+    });
+  });
+
   const onDelete = async () => {
     await getRepository().deleteEvent(event.id).catch(err => {
       throw new Error(`Could not delete event ${event.name}: ${err.message}`);
@@ -206,6 +216,23 @@
   
 </script>
 
+<style lang="scss">
+  @use "../../styles/colors.scss";
+  @use "../../styles/dimensions.scss";
+
+  div.meetingLinks {
+    display: flex;
+    flex-direction: column;
+    gap: dimensions.$gapSmaller;
+  }
+
+  a.meetingLink {
+    color: colors.$foregroundLink;
+    text-decoration: underline;
+    word-break: break-all;
+  }
+</style>
+
 <EditableModal
   title={title}
   deleteConfirmation={`Are you sure you want to delete event "${event ? event.name : ""}"?`}
@@ -227,6 +254,13 @@
     {/if}
     {#if editMode || event.desc}
       <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
+    {/if}
+    {#if !editMode && meetingLinks.length > 0}
+      <div class="meetingLinks">
+        {#each meetingLinks as link (link)}
+          <a class="meetingLink" href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+        {/each}
+      </div>
     {/if}
     {#if editMode}
         <ToggleInput bind:value={event.date.allDay} name="all_day" description="All Day"/>

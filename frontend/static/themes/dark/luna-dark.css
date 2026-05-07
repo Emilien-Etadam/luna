@@ -7,10 +7,10 @@ html[data-theme="dark"] {
   --colorForegroundPrimary: var(--colorForegroundBright);
 
   --colorBackgroundSecondary: #1f1f1f;
-  --colorForegroundSecondary: #858585;
+  --colorForegroundSecondary: #a6a6a6;
 
   --colorBackgroundTertiary: #252526;
-  --colorForegroundTertiary: #858585;
+  --colorForegroundTertiary: #9a9a9a;
 
   --colorBackgroundSuccess: #5a8f5a;
   --colorForegroundSuccess: #f3f7f3;

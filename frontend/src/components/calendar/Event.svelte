@@ -181,9 +181,9 @@
   span.time {
     flex-shrink: 0;
     text-align: center;
-    font-weight: text.$fontWeightLight;
+    font-weight: text.$fontWeightSemiBold;
     font-family: text.$fontFamilyTime;
-    font-size: text.$fontSizeSmaller;
+    font-size: text.$fontSizeSmall;
   }
   span.icons {
     flex-shrink: 0;

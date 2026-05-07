@@ -174,7 +174,7 @@
 </style>
 
 <div class="day">
-  <div class="background" class:otherMonth={!isCurrentMonth} class:todayCell={isToday}>
+  <div class="background" class:otherMonth={!isCurrentMonth} class:todayCell={isToday && view !== "day"}>
     <span class="top">
       <span class="date" class:sunday={date.getDay() === 0} class:today={isToday}>
         {date.getDate()}
