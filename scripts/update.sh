@@ -14,8 +14,34 @@ require_cmd() {
   command -v "$1" >/dev/null 2>&1 || fail "Commande manquante: $1"
 }
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_PATH}")" && pwd)"
+
+detect_repo_root() {
+  if [[ -n "${LUNA_REPO_DIR:-}" ]]; then
+    printf "%s\n" "${LUNA_REPO_DIR}"
+    return
+  fi
+
+  if git -C "${PWD}" rev-parse --show-toplevel >/dev/null 2>&1; then
+    git -C "${PWD}" rev-parse --show-toplevel
+    return
+  fi
+
+  if git -C "${SCRIPT_DIR}/.." rev-parse --show-toplevel >/dev/null 2>&1; then
+    git -C "${SCRIPT_DIR}/.." rev-parse --show-toplevel
+    return
+  fi
+
+  if [[ -d "${HOME}/luna/.git" ]]; then
+    printf "%s\n" "${HOME}/luna"
+    return
+  fi
+
+  fail "Impossible de trouver le repo Luna. Definis LUNA_REPO_DIR=/chemin/vers/luna."
+}
+
+REPO_ROOT="$(detect_repo_root)"
 
 BACKEND_SERVICE="${BACKEND_SERVICE:-luna-backend}"
 FRONTEND_SERVICE="${FRONTEND_SERVICE:-luna-frontend}"
