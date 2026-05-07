@@ -301,7 +301,7 @@
 <aside>
   <Title>Luna</Title>
 
-  {#if !publicReadonly && settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+  {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
     <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
   {/if}
 

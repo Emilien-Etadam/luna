@@ -152,7 +152,8 @@
   // TODO: figure out how to do this without hard-coded values
   // 9: gap between events
   // 27: height of an event
-  let maxEvents: number = $derived(containerHeight === 0 ? 0 : Math.max(Math.floor((containerHeight + 9) / 27), 0));
+  // Fallback to 1 while the first-cell height is not measured yet, to avoid rendering only "and X more" bars.
+  let maxEvents: number = $derived(containerHeight === 0 ? 1 : Math.max(Math.floor((containerHeight + 9) / 27), 1));
 
   /* Show more */
   let showDateModal: ((date: Date, events: (EventModel | null)[]) => any) = getContext("showDateModal");
