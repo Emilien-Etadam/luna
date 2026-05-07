@@ -73,6 +73,9 @@
     return Array.from(colors);
   });
 
+  // Désaccentue les événements terminés (visuel calme, sans masquer)
+  let isPast = $derived(event !== null && event.date.end.getTime() < Date.now());
+
   function mouseEnter() {
     if (event == null) return;
 
@@ -114,13 +117,14 @@
   @use "../../styles/dimensions.scss";
   @use "../../styles/text.scss";
 
-  div {
+  div.event {
     box-sizing: border-box;
-    min-height: 18px;
-    padding: 2px 4px;
-    padding-left: calc(var(--gapBetweenDays) + 4px);
+    min-height: 20px;
+    padding: 2px 6px;
+    padding-left: calc(var(--gapBetweenDays) + 6px);
     font-size: var(--font-size-ui);
     margin: 0;
+    border-radius: var(--radius-1);
 
     display: flex;
     gap: 6px;
@@ -136,30 +140,31 @@
 
     flex-shrink: 0;
 
-    border-left: 2px solid transparent;
-    transition: background-color linear animations.$animationSpeedFast, border-color linear animations.$animationSpeedFast;
+    transition: filter var(--transition-fast), opacity var(--transition-fast),
+                box-shadow var(--transition-fast), transform var(--transition-fast);
   }
 
-  div:focus {
+  div.event:focus {
     outline: none;
   }
 
-  div::after {
+  div.event::after {
     content: ".";
     visibility: hidden;
   }
+
   div.placeholder {
     visibility: hidden;
   }
+
   div.start {
-    border-top-left-radius: var(--radius-2);
-    border-bottom-left-radius: var(--radius-2);
+    border-top-left-radius: var(--radius-1);
+    border-bottom-left-radius: var(--radius-1);
     margin-left: var(--gapBetweenDays);
-    padding-left: 4px;
   }
   div.end {
-    border-top-right-radius: var(--radius-2);
-    border-bottom-right-radius: var(--radius-2);
+    border-top-right-radius: var(--radius-1);
+    border-bottom-right-radius: var(--radius-1);
     margin-right: var(--gapBetweenDays);
   }
 
@@ -174,27 +179,39 @@
     color: colors.$foregroundDark;
   }
 
+  /* Événements passés : désaccentués mais lisibles */
+  div.past {
+    opacity: var(--event-past-opacity);
+  }
+
   span.name {
     text-overflow: ellipsis;
     overflow: hidden;
     min-width: 0;
     flex-shrink: 1;
     font-size: var(--font-size-ui);
-    font-weight: 400;
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.005em;
   }
+
   span.time {
     flex-shrink: 0;
     text-align: center;
-    font-weight: 400;
+    font-weight: var(--font-weight-ui);
     font-family: text.$fontFamilyTime;
     font-size: var(--font-size-event-time);
-    color: var(--fg-muted);
+    font-variant-numeric: tabular-nums;
+    color: currentColor;
+    opacity: 0.85;
   }
+
   span.icons {
     flex-shrink: 0;
     display: flex;
     align-items: center;
+    opacity: 0.75;
   }
+
   span.participants {
     flex-shrink: 0;
     display: flex;
@@ -202,21 +219,31 @@
     gap: 4px;
   }
 
-  div.onlyCircle {
-    background-color: transparent !important;
-    color: var(--fg-muted) !important;
+  /* Variante "pastille" : pas de fond, dot coloré + texte calme */
+  div.event.onlyCircle {
+    background-color: transparent;
+    color: var(--fg-primary);
+    padding-left: calc(var(--gapBetweenDays) + 4px);
+  }
+  div.event.onlyCircle:hover,
+  div.event.onlyCircle.hover {
+    background-color: var(--bg-hover);
+  }
+  div.event.onlyCircle.active {
+    background-color: var(--bg-active);
   }
 
-  div.hover {
-    border-left-color: transparent;
-    background-color: var(--bg-hover) !important;
-    color: var(--fg-primary) !important;
+  /* Hover : on garde la couleur de l'événement et on l'éclaircit légèrement
+     via un filter (pas de !important, pas d'écrasement) */
+  div.event.hover:not(.onlyCircle) {
+    filter: brightness(1.08);
   }
-
-  div.active {
-    border-left-color: var(--border-focus);
-    background-color: var(--bg-selection-active) !important;
-    color: var(--fg-strong) !important;
+  div.event.active:not(.onlyCircle) {
+    filter: brightness(1.15);
+    box-shadow: var(--focus-ring-strong);
+  }
+  div.event:focus-visible {
+    box-shadow: var(--focus-ring-strong);
   }
 </style>
 
@@ -225,6 +252,7 @@
 {#if event}
   <div
     bind:this={element}
+    class="event"
     class:start={isEventStart}
     class:end={eventEndsThisWeek}
     class:hover={currentlyHoveredEvent == event}
@@ -233,6 +261,7 @@
     class:foregroundBright={isBackgroundDark}
     class:foregroundDark={!isBackgroundDark}
     class:onlyCircle={showOnlyCircle}
+    class:past={isPast}
     onmouseenter={mouseEnter}
     onmouseleave={mouseLeave}
     onmousedown={mouseDown}
@@ -243,7 +272,7 @@
     role="button"
     tabindex={isFirstDisplay ? 0 : -1}
     style="
-      background-color:{currentlyHoveredEvent == event ? GetEventHoverColor(event) : GetEventColor(event)};
+      {showOnlyCircle ? '' : `background-color:${GetEventColor(event)};`}
       width: calc({(showOnlyCircle ? 1 : remainingDaysThisWeek) * 100}% - {((isEventStart ? 1 : 0) + (eventEndsThisWeek ? 1 : 0)) * (showOnlyCircle ? 0 : 1)} * var(--gapBetweenDays));
       z-index: {16 - getDayIndex(date)};
     "

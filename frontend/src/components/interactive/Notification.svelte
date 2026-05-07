@@ -72,12 +72,16 @@
   }
 
   div.box {
-    padding: dimensions.$gapLarge;
-    border-radius: dimensions.$borderRadius;
+    padding: dimensions.$gapMiddle dimensions.$gapLarge;
+    border-radius: var(--borderRadius);
+    border: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+    box-shadow: var(--shadow-2);
     cursor: pointer;
     position: relative;
     overflow: hidden;
     white-space: pre-wrap;
+    font-size: var(--font-size-ui);
+    line-height: 1.4;
   }
 
   @each $key, $val in colors.$specialColors {

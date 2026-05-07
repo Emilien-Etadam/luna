@@ -23,14 +23,16 @@
   @use "../../styles/text.scss";
 
   label {
-    color: color-mix(in srgb, colors.$foregroundPrimary 50%, transparent);
-    font-size: text.$fontSizeSmall;
+    color: var(--fg-muted);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: 0.01em;
     cursor: text;
     display: flex;
     flex-direction: row;
     gap: dimensions.$gapSmaller;
     align-items: center;
-    padding-left: calc(dimensions.$gapSmall / text.$fontSizeSmallRatio);
+    padding-left: 2px;
   }
 
   .ownPositioning {

@@ -47,16 +47,26 @@
   @use "../../styles/decorations.scss";
 
   form {
-    border-radius: dimensions.$borderRadius;
+    border-radius: var(--borderRadiusLarge);
     max-width: 50vw;
     min-width: 30em;
-    padding: dimensions.$gapLarge dimensions.$gapLarger dimensions.$gapLarger dimensions.$gapLarger;
-    border-radius: dimensions.$borderRadius;
+    padding: 24px 28px 28px 28px;
+    background-color: var(--surface-raised);
+    border: 1px solid var(--border-default);
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
     gap: dimensions.$gapMiddle;
-    box-shadow: decorations.$boxShadow;
+    box-shadow: var(--shadow-2);
+  }
+
+  @media (max-width: 720px) {
+    form {
+      max-width: 100vw;
+      min-width: 0;
+      width: 100%;
+      padding: 20px;
+    }
   }
 </style>
 

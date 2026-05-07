@@ -64,12 +64,18 @@
     justify-content: space-between;
     user-select: none;
     cursor: grab;
-    padding: dimensions.$gapTiny dimensions.$gapSmaller;
-    border-radius: var(--radius-2);
+    min-height: 24px;
+    padding: 2px 8px 2px 14px;
+    border-radius: var(--radius-1);
+    transition: background-color var(--transition-fast);
   }
 
   div.calendarEntry:hover {
-    background-color: var(--colorBackgroundHover);
+    background-color: var(--bg-hover);
+  }
+
+  div.calendarEntry:focus-within {
+    background-color: var(--bg-hover);
   }
 
   span {

@@ -87,31 +87,35 @@
   @use "../../styles/dimensions.scss";
 
   dialog {
-    border: 0;
-    border-radius: dimensions.$borderRadius;
+    border: 1px solid var(--border-default);
+    border-radius: var(--borderRadiusLarge);
     padding: 0;
-    background-color: colors.$backgroundPrimary;
-    color: colors.$foregroundPrimary;
+    background-color: var(--surface-raised);
+    color: var(--fg-primary);
+    box-shadow: var(--shadow-3);
+    max-width: min(90vw, 640px);
+    max-height: 90vh;
   }
   :global(html[data-frost="true"]) dialog {
-    background-color: color-mix(in srgb, colors.$backgroundPrimary 75%, transparent);
-    backdrop-filter: blur(dimensions.$blurLarge);
+    background-color: color-mix(in srgb, var(--surface-raised) 80%, transparent);
+    backdrop-filter: blur(var(--overlay-blur));
   }
   dialog::backdrop {
-    backdrop-filter: blur(dimensions.$blur);
+    background-color: var(--overlay-bg);
+    backdrop-filter: blur(var(--overlay-blur));
   }
 
   dialog[open] {
-		animation: zoom animations.$animationSpeed animations.$cubic forwards;
-	}
+    animation: zoom animations.$animationSpeed animations.$cubic forwards;
+  }
 
   dialog:focus {
     outline: none;
   }
   
   form {
-    padding: dimensions.$gapLarge dimensions.$gapLarger dimensions.$gapLarger dimensions.$gapLarger;
-    border-radius: dimensions.$borderRadius;
+    padding: 20px 24px 24px 24px;
+    border-radius: var(--borderRadiusLarge);
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
@@ -119,6 +123,22 @@
     box-sizing: content-box;
     min-width: 30em;
     width: fit-content;
+  }
+
+  @media (max-width: 720px) {
+    dialog {
+      max-width: 100vw;
+      max-height: 100vh;
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      border: 0;
+    }
+    form {
+      min-width: 0;
+      width: 100%;
+      padding: 16px;
+    }
   }
 </style>
 

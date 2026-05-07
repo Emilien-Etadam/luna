@@ -164,9 +164,23 @@
     color: colors.$foregroundPrimary;
   }
 
+  /* Fallback de focus accessible : si l'élément n'a pas son propre style
+     visible (box-shadow ou outline), un anneau discret apparaît. Les
+     composants stylisés (boutons, inputs) le surchargent localement. */
   :global(*:focus-visible) {
-    outline: 1px solid var(--border-focus);
-    outline-offset: 0;
+    outline: 2px solid color-mix(in srgb, var(--accent-blue) 50%, transparent);
+    outline-offset: 1px;
+    border-radius: 2px;
+  }
+  /* Les éléments qui gèrent leur propre indicateur (use:focusIndicator,
+     box-shadow, etc.) suppriment ce fallback. */
+  :global(button:focus-visible),
+  :global(a:focus-visible),
+  :global(input:focus-visible),
+  :global(textarea:focus-visible),
+  :global(select:focus-visible),
+  :global([role="button"]:focus-visible) {
+    outline: 0;
   }
 
   div.notifications {

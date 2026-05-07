@@ -84,7 +84,7 @@
   div.calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 4px;
+    gap: 2px;
     width: 100%;
   }
 
@@ -96,7 +96,7 @@
 
   div.smaller {
     font-size: text.$fontSizeSmall;
-    gap: dimensions.$gapSmaller; 
+    gap: 2px;
   }
 
   button.day {
@@ -104,16 +104,26 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: var(--radius-2);
+    border-radius: var(--radius-1);
     font-size: var(--font-size-day-number);
+    font-variant-numeric: tabular-nums;
     font-weight: 400;
     color: var(--fg-primary);
     background-color: transparent;
-    padding: 4px;
+    padding: 3px 0;
     cursor: pointer;
     user-select: none;
     position: relative;
     overflow: visible;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  button.day:hover {
+    background-color: var(--bg-hover);
+  }
+
+  button.day:focus-visible {
+    box-shadow: var(--focus-ring);
   }
 
   button.day.weekend {
@@ -121,28 +131,23 @@
   }
 
   button.day.today {
-    color: var(--fg-strong);
-    font-weight: 600;
-    background-color: transparent;
-    --barFocusIndicatorColor: var(--border-focus);
+    color: var(--fg-inverted);
+    font-weight: var(--font-weight-semibold);
+    background-color: var(--accent-blue);
+    --barFocusIndicatorColor: var(--accent-blue);
   }
 
-  button.day.today::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 1.5em;
-    height: 1.5em;
-    border-radius: var(--radius-2);
-    background-color: var(--bg-selection-active);
+  button.day.today:hover {
+    background-color: var(--accent-blue);
+    filter: brightness(1.08);
   }
 
   button.day.otherMonth {
     color: var(--fg-disabled);
     opacity: 1;
+  }
+  button.day.today.otherMonth {
+    color: var(--fg-inverted);
   }
 </style>
 

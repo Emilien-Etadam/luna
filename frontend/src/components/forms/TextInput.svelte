@@ -128,29 +128,58 @@
     justify-content: center;
     position: relative;
 
-    border-radius: calc(dimensions.$borderRadius + 0.1em);
+    border: 1px solid var(--border-default);
+    border-radius: var(--borderRadius);
     padding: 0 dimensions.$gapSmall;
     width: 100%;
     overflow: hidden;
+    background-color: var(--surface-base);
 
-    color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
+    color: var(--fg-primary);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast),
+                background-color var(--transition-fast);
+  }
+
+  div.wrapper.editable:hover {
+    border-color: var(--border-strong);
+  }
+
+  div.wrapper:focus-within {
+    border-color: var(--accent-blue);
+    box-shadow: var(--focus-ring);
+  }
+
+  div.wrapper.error {
+    border-color: var(--accent-red);
+  }
+  div.wrapper.error:focus-within {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-red) 35%, transparent);
   }
 
   input, textarea {
     all: unset;
     flex-grow: 1;
-    margin: dimensions.$gapSmall 0;
+    margin: 6px 0;
     padding: 0;
+    color: var(--fg-primary);
+    font-family: inherit;
+    font-size: var(--font-size-ui);
+    line-height: 1.4;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--fg-disabled);
   }
 
   div.wrapper.editable {
-    background: colors.$backgroundSecondary;
+    background-color: var(--surface-base);
   }
-  div.wrapper.editable > input, div.wrapper.editable > textarea {
-    color: colors.$foregroundSecondary;
-  }
+
   div.noneditable {
     --barFocusIndicatorColor: transparent;
+    background-color: var(--surface-sunken);
+    border-color: var(--border-subtle);
+    color: var(--fg-muted);
   }
 
   textarea {
@@ -164,15 +193,17 @@
   }
 
   span.label {
-    font-size: text.$fontSizeSmall;
+    font-size: var(--font-size-xs);
     margin-bottom: -(dimensions.$gapMiddle);
     display: flex;
     justify-content: space-between;
+    gap: dimensions.$gapSmall;
   }
 
   span.errorMessage {
-    color: colors.$backgroundFailure;
-    font-size: text.$fontSizeSmall;
+    color: var(--accent-red);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
   }
 </style>
 

@@ -62,7 +62,7 @@
   div {
     display: flex;
     flex-direction: row;
-    gap: dimensions.$gapSmall;
+    gap: 4px;
     align-items: center;
     position: relative;
     width: max-content;
@@ -74,15 +74,18 @@
     cursor: pointer;
     position: relative;
     font-size: var(--font-size-ui);
-    font-weight: 400;
-    color: var(--fg-primary);
-    padding: 2px 4px;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.005em;
+    color: var(--fg-strong);
+    padding: 4px 10px;
     border-radius: var(--radius-2);
+    transition: background-color var(--transition-fast);
   }
 
   button:hover,
   button:focus-visible {
     background-color: var(--bg-hover);
+    outline: 0;
   }
 </style>
 

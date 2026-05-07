@@ -58,15 +58,17 @@
   @use "../../styles/colors.scss";
 
   div {
-    color: var(--fg-primary);
-    min-height: 1.25em;
+    color: var(--fg-muted);
+    min-height: 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     align-content: center;
     user-select: none;
-    padding: dimensions.$gapTiny dimensions.$gapSmaller;
-    border-radius: var(--radius-2);
+    padding: 2px 6px;
+    margin-top: 4px;
+    border-radius: var(--radius-1);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
 
   div :global(button),
@@ -75,11 +77,15 @@
     font-weight: var(--font-weight-section-header);
     letter-spacing: var(--letter-spacing-section-header);
     text-transform: uppercase;
-    color: var(--fg-primary);
+    color: var(--fg-muted);
   }
 
   div:hover {
-    background-color: var(--colorBackgroundHover);
+    color: var(--fg-primary);
+  }
+
+  div:hover :global(button),
+  div:hover .sourceName {
     color: var(--fg-primary);
   }
 
@@ -104,15 +110,6 @@
     display: inline;
     width: max-content;
   }
-
-  //span :global(button) {
-  //  opacity: 0;
-  //  transition: all $animationSpeed $cubic;
-  //}
-
-  //span:hover :global(button) {
-  //  opacity: 1;
-  //}
 </style>
 
 {#if readOnly}

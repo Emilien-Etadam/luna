@@ -44,9 +44,25 @@
 
     cursor: pointer;
 
-    border-radius: calc(0.5 * text.$lineHeightParagraph);
-    background-color: colors.$backgroundTertiary;
+    border-radius: var(--radius-pill);
+    background-color: var(--surface-overlay);
+    border: 1px solid var(--border-default);
     overflow: hidden;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast),
+                box-shadow var(--transition-fast);
+  }
+
+  button:hover {
+    border-color: var(--border-strong);
+  }
+
+  button:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  button.check {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
   }
 
   button.check {
@@ -60,38 +76,33 @@
     left: 0;
     width: 100%;
     height: 100%;
-
-    background-color: colors.$backgroundAccent;
-    border-radius: calc(0.5 * text.$lineHeightParagraph);
-
-    transition: transform animations.$animationSpeed;
-
-    transform: scale(0);
-  }
-
-  button.check::after {
-    transform: none;
+    background-color: transparent;
+    transition: opacity var(--transition-fast);
+    opacity: 0;
   }
 
   .handle {
-    height: calc(100% - dimensions.$gapSmaller);
+    height: calc(100% - 6px);
     aspect-ratio: 1/1;
     border-radius: 50%;
-    background-color: colors.$backgroundPrimary;
+    background-color: var(--fg-muted);
 
-    left: dimensions.$gapSmaller;
+    left: 3px;
 
     position: absolute;
 
-    transform: scale(0.75);
-
-    transition: transform animations.$animationSpeed animations.$cubic;
+    transition: transform var(--transition) var(--easing-standard),
+                background-color var(--transition-fast);
 
     z-index: 2;
   }
 
+  button.check .handle {
+    background-color: #ffffff;
+  }
+
   .handle.check {
-    transform: translateX(100%);
+    transform: translateX(calc(100% + 3px));
   }
 
   button.disabled {

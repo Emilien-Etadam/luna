@@ -1,169 +1,279 @@
 /**
- * VS Code Dark+ — tokens stricts (source unique couleurs / espacements typo de base)
- * Les composants doivent consommer var(--token) ou les alias legacy --color* ci-dessous.
+ * Luna — Design tokens
+ *
+ * Inspiré de VS Code Dark+, Linear, Cron, Apple Calendar.
+ * Source unique pour les surfaces, bordures, typographie, espacements,
+ * couleurs sémantiques et états du calendrier.
+ *
+ * Les composants doivent consommer var(--token) (ou les alias legacy
+ * --color* situés en bas de chaque thème).
+ *
+ * Conventions :
+ *  - Surfaces : --surface-{sunken|base|raised|overlay} et alias --bg-{role}
+ *  - Bordures : --border-{subtle|default|strong|focus}
+ *  - Texte    : --fg-{strong|primary|muted|disabled|inverted}
+ *  - Calendar : --bg-{today,weekend,other-month}, --event-past-opacity
+ *  - Espacement : --space-{1..6}
+ *  - Hauteur de contrôle : --control-h-{sm,md,lg}
+ *  - Focus : --focus-ring (alpha)
+ *  - Élévation : --shadow-{1,2,3}
  */
 
+/* =====================================================
+ *  DARK
+ * ===================================================== */
 html[data-theme="dark"] {
-  /* Surfaces */
-  --bg-activity-bar: #333333;
-  --bg-side-bar: #252526;
-  --bg-editor: #1e1e1e;
-  --bg-status-bar: #007acc;
-  --bg-status-bar-hover: #1f8ad2;
-  --bg-section-header: #252526;
-  --bg-row-alt: #2d2d2d;
-  --bg-selection-active: #094771;
-  --bg-selection-inactive: #37373d;
-  --bg-hover: #2a2d2e;
+  /* Surfaces (4 niveaux + sunken) */
+  --surface-sunken: #181818;
+  --surface-base: #1e1e1e;
+  --surface-raised: #252526;
+  --surface-overlay: #2a2a2b;
 
-  /* Bordures */
-  --border-default: #2d2d2d;
-  --border-strong: #3c3c3c;
-  --border-focus: #007acc;
+  /* Surfaces nommées (alias spécifiques UI) */
+  --bg-activity-bar: #1c1c1c;
+  --bg-side-bar: #1d1d1e;
+  --bg-editor: var(--surface-base);
+  --bg-section-header: #232324;
+  --bg-row-alt: #232324;
+  --bg-status-bar: #232324;
+  --bg-status-bar-hover: #2c2c2d;
+  --bg-selection-active: #094771;
+  --bg-selection-inactive: #2d2d2d;
+  --bg-hover: #2a2a2b;
+  --bg-active: #2f2f31;
+  --bg-color-picker-sl: #ffffff;
+
+  /* Calendar — états jours / événements */
+  --bg-today: color-mix(in srgb, var(--accent-blue) 14%, transparent);
+  --bg-today-strong: color-mix(in srgb, var(--accent-blue) 22%, transparent);
+  --fg-today: #ffffff;
+  --bg-weekend: #1b1b1c;
+  --bg-other-month: #1a1a1a;
+  --fg-other-month: #555555;
+  --event-past-opacity: 0.55;
+
+  /* Bordures — séparation grille, contour, focus */
+  --border-subtle: #2a2a2b;
+  --border-default: #3a3a3c;
+  --border-strong: #4a4a4d;
+  --border-focus: var(--accent-blue);
 
   /* Texte */
-  --fg-primary: #cccccc;
-  --fg-strong: #ffffff;
-  --fg-muted: #858585;
-  --fg-disabled: #6b6b6b;
+  --fg-primary: #d4d4d4;
+  --fg-strong: #f5f5f5;
+  --fg-muted: #8b8b8b;
+  --fg-subtle: #6c6c6c;
+  --fg-disabled: #565656;
+  --fg-inverted: #1e1e1e;
 
-  /* Accents sémantiques (désaturés) */
+  /* Accents */
   --accent-blue: #3794ff;
   --accent-yellow: #cca700;
   --accent-green: #89d185;
   --accent-red: #f14c4c;
+  --accent-purple: #b388eb;
 
-  /* Plan saturation/luminosité du sélecteur de couleur (modal) */
+  /* Élévation — ombres très discrètes */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-3: 0 10px 28px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.45);
+
+  /* Overlay (backdrop modales/popovers) */
+  --overlay-bg: rgba(0, 0, 0, 0.45);
+  --overlay-blur: 4px;
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 2px color-mix(in srgb, var(--accent-blue) 55%, transparent);
+  --focus-ring-strong: 0 0 0 2px var(--accent-blue);
+
+  /* Hover/Active token sur transparent (pour fonds clairs/sombres) */
+  --tint-hover: rgba(255, 255, 255, 0.06);
+  --tint-active: rgba(255, 255, 255, 0.10);
+}
+
+/* =====================================================
+ *  LIGHT
+ * ===================================================== */
+html[data-theme="light"] {
+  --surface-sunken: #f1f1f2;
+  --surface-base: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-overlay: #ffffff;
+
+  --bg-activity-bar: #f6f6f7;
+  --bg-side-bar: #f6f6f7;
+  --bg-editor: var(--surface-base);
+  --bg-section-header: #f0f0f1;
+  --bg-row-alt: #f7f7f8;
+  --bg-status-bar: #f0f0f1;
+  --bg-status-bar-hover: #e8e8ea;
+  --bg-selection-active: #d6e7ff;
+  --bg-selection-inactive: #e7e7e9;
+  --bg-hover: #ececee;
+  --bg-active: #e0e0e3;
   --bg-color-picker-sl: #ffffff;
 
+  --bg-today: color-mix(in srgb, var(--accent-blue) 10%, transparent);
+  --bg-today-strong: color-mix(in srgb, var(--accent-blue) 18%, transparent);
+  --fg-today: #0b3a6b;
+  --bg-weekend: #f7f7f8;
+  --bg-other-month: #f6f6f7;
+  --fg-other-month: #b1b1b3;
+  --event-past-opacity: 0.55;
+
+  --border-subtle: #ececee;
+  --border-default: #dcdcdf;
+  --border-strong: #c2c2c5;
+  --border-focus: var(--accent-blue);
+
+  --fg-primary: #1f1f23;
+  --fg-strong: #000000;
+  --fg-muted: #5e5e63;
+  --fg-subtle: #7a7a80;
+  --fg-disabled: #a8a8ad;
+  --fg-inverted: #ffffff;
+
+  --accent-blue: #0a6dd5;
+  --accent-yellow: #b08400;
+  --accent-green: #2ea043;
+  --accent-red: #d33b3b;
+  --accent-purple: #8857d0;
+
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-2: 0 4px 14px rgba(15, 23, 42, 0.10), 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-3: 0 12px 32px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.08);
+
+  --overlay-bg: rgba(15, 23, 42, 0.25);
+  --overlay-blur: 4px;
+
+  --focus-ring: 0 0 0 2px color-mix(in srgb, var(--accent-blue) 35%, transparent);
+  --focus-ring-strong: 0 0 0 2px var(--accent-blue);
+
+  --tint-hover: rgba(15, 23, 42, 0.05);
+  --tint-active: rgba(15, 23, 42, 0.09);
+}
+
+/* =====================================================
+ *  Tokens partagés (typographie, espacements, rayons,
+ *  contrôles, transitions, alias legacy)
+ * ===================================================== */
+html[data-theme="dark"],
+html[data-theme="light"] {
   /* Typographie */
-  --font-ui: "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", sans-serif;
-  --font-mono: "Cascadia Code", "JetBrains Mono", consolas, "Courier New", monospace;
+  --font-ui: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", consolas, "Courier New", monospace;
   --font-size-ui: 13px;
-  --line-height-ui: 1.4;
+  --font-size-sm: 12px;
+  --font-size-xs: 11px;
+  --line-height-ui: 1.45;
   --font-weight-ui: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
   --font-size-section-header: 11px;
   --font-weight-section-header: 600;
-  --letter-spacing-section-header: 0.5px;
-  --font-size-event-time: 12px;
+  --letter-spacing-section-header: 0.6px;
+  --font-size-event-time: 11px;
   --font-size-day-number: 12px;
   --font-size-status-bar: 12px;
 
-  /* Rayons (max 2px sauf pastilles) */
-  --radius-2: 2px;
-  --borderRadiusSmall: 2px;
-  --borderRadius: 2px;
-  --borderRadiusLarge: 2px;
-
-  /* Pont typo héritée du layout inline */
   --fontFamilyText: var(--font-ui);
   --fontFamilyTime: var(--font-mono);
 
-  /* Transitions max 100ms */
-  --transition-fast: 100ms ease-out;
+  /* Rayons (cohérent avec Linear/Apple : 4-6 px max sauf pastilles) */
+  --radius-1: 3px;
+  --radius-2: 4px;
+  --radius-3: 6px;
+  --radius-pill: 999px;
+  --borderRadiusSmall: var(--radius-1);
+  --borderRadius: var(--radius-2);
+  --borderRadiusLarge: var(--radius-3);
 
-  /* Alias legacy Luna → tokens (évite de tout réécrire d’un coup) */
+  /* Espacement (échelle 4 px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  /* Hauteur de contrôle */
+  --control-h-sm: 24px;
+  --control-h-md: 28px;
+  --control-h-lg: 32px;
+
+  /* Transitions — plafond 120 ms, easing standard */
+  --transition-fast: 80ms ease-out;
+  --transition: 120ms ease-out;
+  --easing-standard: cubic-bezier(0.16, 1, 0.3, 1);
+
+  font-family: var(--font-ui);
+  font-size: var(--font-size-ui);
+  line-height: var(--line-height-ui);
+  font-weight: var(--font-weight-ui);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* =====================================================
+ *  Alias legacy Luna → tokens (mapping centralisé pour
+ *  ne pas avoir à réécrire tous les composants existants)
+ * ===================================================== */
+html[data-theme="dark"] {
   --colorForegroundDark: #000000;
   --colorForegroundBright: var(--fg-strong);
   --colorForegroundLink: var(--accent-blue);
   --colorBackgroundPrimary: var(--bg-editor);
   --colorForegroundPrimary: var(--fg-primary);
-  --colorBackgroundSecondary: var(--bg-side-bar);
-  --colorForegroundSecondary: var(--fg-muted);
-  --colorBackgroundTertiary: var(--bg-section-header);
-  --colorForegroundTertiary: var(--fg-muted);
-  --colorBackgroundSuccess: color-mix(in srgb, var(--accent-green) 35%, var(--bg-editor));
+  --colorBackgroundSecondary: var(--surface-raised);
+  --colorForegroundSecondary: var(--fg-primary);
+  --colorBackgroundTertiary: var(--surface-overlay);
+  --colorForegroundTertiary: var(--fg-primary);
+  --colorBackgroundSuccess: color-mix(in srgb, var(--accent-green) 30%, var(--surface-raised));
   --colorForegroundSuccess: var(--fg-strong);
-  --colorBackgroundWarning: color-mix(in srgb, var(--accent-yellow) 40%, var(--bg-editor));
+  --colorBackgroundWarning: color-mix(in srgb, var(--accent-yellow) 35%, var(--surface-raised));
   --colorForegroundWarning: var(--fg-strong);
-  --colorBackgroundDanger: color-mix(in srgb, var(--accent-red) 35%, var(--bg-editor));
+  --colorBackgroundDanger: color-mix(in srgb, var(--accent-red) 30%, var(--surface-raised));
   --colorForegroundDanger: var(--fg-strong);
-  --colorBackgroundAccent: var(--border-focus);
-  --colorForegroundAccent: var(--fg-strong);
+  --colorBackgroundAccent: var(--accent-blue);
+  --colorForegroundAccent: #ffffff;
   --colorForegroundSunday: var(--fg-muted);
   --colorBackgroundSelection: var(--bg-selection-active);
-  --colorBorderSubtle: var(--border-default);
+  --colorBorderSubtle: var(--border-subtle);
   --colorBackgroundHover: var(--bg-hover);
 }
 
-/* Thème clair : mêmes noms de tokens pour cohérence */
 html[data-theme="light"] {
-  --bg-activity-bar: #f3f3f3;
-  --bg-side-bar: #f3f3f3;
-  --bg-editor: #ffffff;
-  --bg-status-bar: #007acc;
-  --bg-status-bar-hover: #1f8ad2;
-  --bg-section-header: #f3f3f3;
-  --bg-row-alt: #f0f0f0;
-  --bg-selection-active: #add6ff;
-  --bg-selection-inactive: #e8e8e8;
-  --bg-hover: #e8e8e8;
-
-  --border-default: #e4e4e4;
-  --border-strong: #d4d4d4;
-  --border-focus: #007acc;
-
-  --fg-primary: #333333;
-  --fg-strong: #000000;
-  --fg-muted: #6e6e6e;
-  --fg-disabled: #a8a8a8;
-
-  --accent-blue: #3794ff;
-  --accent-yellow: #cca700;
-  --accent-green: #89d185;
-  --accent-red: #f14c4c;
-
-  --bg-color-picker-sl: #ffffff;
-
-  --font-ui: "Segoe UI", -apple-system, BlinkMacSystemFont, system-ui, "Helvetica Neue", sans-serif;
-  --font-mono: "Cascadia Code", "JetBrains Mono", consolas, "Courier New", monospace;
-  --font-size-ui: 13px;
-  --line-height-ui: 1.4;
-  --font-weight-ui: 400;
-  --font-size-section-header: 11px;
-  --font-weight-section-header: 600;
-  --letter-spacing-section-header: 0.5px;
-  --font-size-event-time: 12px;
-  --font-size-day-number: 12px;
-  --font-size-status-bar: 12px;
-
-  --radius-2: 2px;
-  --borderRadiusSmall: 2px;
-  --borderRadius: 2px;
-  --borderRadiusLarge: 2px;
-
-  --fontFamilyText: var(--font-ui);
-  --fontFamilyTime: var(--font-mono);
-
-  --transition-fast: 100ms ease-out;
-
   --colorForegroundDark: #000000;
   --colorForegroundBright: #ffffff;
   --colorForegroundLink: var(--accent-blue);
   --colorBackgroundPrimary: var(--bg-editor);
   --colorForegroundPrimary: var(--fg-primary);
-  --colorBackgroundSecondary: var(--bg-side-bar);
-  --colorForegroundSecondary: var(--fg-muted);
-  --colorBackgroundTertiary: var(--bg-section-header);
-  --colorForegroundTertiary: var(--fg-muted);
-  --colorBackgroundSuccess: color-mix(in srgb, var(--accent-green) 25%, var(--bg-editor));
+  --colorBackgroundSecondary: var(--surface-raised);
+  --colorForegroundSecondary: var(--fg-primary);
+  --colorBackgroundTertiary: var(--surface-sunken);
+  --colorForegroundTertiary: var(--fg-primary);
+  --colorBackgroundSuccess: color-mix(in srgb, var(--accent-green) 22%, var(--surface-raised));
   --colorForegroundSuccess: var(--fg-strong);
-  --colorBackgroundWarning: color-mix(in srgb, var(--accent-yellow) 30%, var(--bg-editor));
+  --colorBackgroundWarning: color-mix(in srgb, var(--accent-yellow) 28%, var(--surface-raised));
   --colorForegroundWarning: var(--fg-strong);
-  --colorBackgroundDanger: color-mix(in srgb, var(--accent-red) 25%, var(--bg-editor));
+  --colorBackgroundDanger: color-mix(in srgb, var(--accent-red) 22%, var(--surface-raised));
   --colorForegroundDanger: var(--fg-strong);
-  --colorBackgroundAccent: var(--border-focus);
-  --colorForegroundAccent: var(--fg-strong);
+  --colorBackgroundAccent: var(--accent-blue);
+  --colorForegroundAccent: #ffffff;
   --colorForegroundSunday: var(--fg-muted);
   --colorBackgroundSelection: var(--bg-selection-active);
-  --colorBorderSubtle: var(--border-default);
+  --colorBorderSubtle: var(--border-subtle);
   --colorBackgroundHover: var(--bg-hover);
 }
 
-/* Scrollbars (spec VS Code-like) */
+/* =====================================================
+ *  Scrollbars (minimal, désaturé, esprit VS Code)
+ * ===================================================== */
 *::-webkit-scrollbar {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 
 *::-webkit-scrollbar-track {
@@ -171,13 +281,14 @@ html[data-theme="light"] {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #79797966;
+  background: rgba(120, 120, 120, 0.35);
   border: 3px solid transparent;
   background-clip: padding-box;
+  border-radius: var(--radius-pill);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #646464b3;
+  background: rgba(120, 120, 120, 0.55);
   background-clip: padding-box;
   border: 3px solid transparent;
 }
@@ -186,10 +297,19 @@ html[data-theme="light"] {
   background: transparent;
 }
 
-html[data-theme="dark"],
-html[data-theme="light"] {
-  font-family: var(--font-ui);
-  font-size: var(--font-size-ui);
-  line-height: var(--line-height-ui);
-  font-weight: var(--font-weight-ui);
+/* Sélection texte cohérente */
+::selection {
+  background: color-mix(in srgb, var(--accent-blue) 35%, transparent);
+  color: var(--fg-strong);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

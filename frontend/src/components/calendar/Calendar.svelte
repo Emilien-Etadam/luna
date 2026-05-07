@@ -179,21 +179,24 @@
     display: grid;
     gap: 0;
     margin: 0;
+    background-color: var(--bg-section-header);
     border-bottom: 1px solid var(--border-default);
   }
   div.weekday {
-    height: 28px;
+    height: 30px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
-    padding-left: 8px;
+    padding: 0 10px;
     text-align: left;
-    background-color: var(--bg-section-header);
     font-size: var(--font-size-section-header);
     font-weight: var(--font-weight-section-header);
     letter-spacing: var(--letter-spacing-section-header);
     text-transform: uppercase;
-    color: var(--fg-primary);
+    color: var(--fg-muted);
+  }
+  div.weekday.weekend {
+    color: var(--fg-subtle);
   }
   div.weekdays.padded {
     padding-left: calc(1.7em + #{dimensions.$gapSmaller});
@@ -245,16 +248,19 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: var(--bg-section-header);
+    background-color: var(--bg-side-bar);
     margin: 0;
     border-radius: 0;
-    border-bottom: 1px solid var(--border-default);
-    color: var(--fg-muted);
-    font-size: var(--font-size-day-number);
+    border-right: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--fg-subtle);
+    font-size: var(--font-size-xs);
+    font-variant-numeric: tabular-nums;
+    font-weight: var(--font-weight-medium);
   }
 
   div.weekNumber.otherMonth {
-    opacity: 0.5;
+    color: var(--fg-disabled);
   }
 </style>
 
@@ -268,12 +274,13 @@
   >
     {#if view === "month" || view === "week"}
       {#each Array(7) as _, weekDay}
-        <div class="weekday">
-          {getDayName((weekDay + settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7)}
+        {@const dayOfWeek = (weekDay + settings.userSettings[UserSettingKeys.FirstDayOfWeek]) % 7}
+        <div class="weekday" class:weekend={dayOfWeek === 0 || dayOfWeek === 6}>
+          {getDayName(dayOfWeek)}
         </div>
       {/each}
     {:else}
-      <div class="weekday">
+      <div class="weekday" class:weekend={date.getDay() === 0 || date.getDay() === 6}>
         {getDayName(date.getDay())}
       </div>
     {/if}

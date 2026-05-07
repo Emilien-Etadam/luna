@@ -28,9 +28,11 @@
   aside {
     display: flex;
     flex-direction: column;
+    gap: 1px;
     overflow: auto;
     padding-right: dimensions.$gapSmall;
     margin-right: -(dimensions.$gapSmall);
+    min-width: 11em;
   }
 
   .option {
@@ -39,41 +41,49 @@
     font-family: inherit;
     font-size: inherit;
     width: 100%;
-    background-color: colors.$backgroundSecondary;
-    color: colors.$foregroundSecondary;
-    padding: dimensions.$gapSmall;
+    background-color: transparent;
+    color: var(--fg-muted);
+    padding: 7px 10px;
+    border-radius: var(--radius-1);
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     gap: dimensions.$gapSmall;
     position: relative;
     overflow: hidden;
     cursor: pointer;
     flex-shrink: 0;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .option:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-primary);
+  }
+
+  .option:focus-visible {
+    box-shadow: var(--focus-ring);
   }
 
   .first {
-    border-top-left-radius: dimensions.$borderRadius;
-    border-top-right-radius: dimensions.$borderRadius;
+    margin-top: 0;
   }
-
-  .last {
-    border-bottom-left-radius: dimensions.$borderRadius;
-    border-bottom-right-radius: dimensions.$borderRadius;
-  }
-
 
   :not(.option:last-child).last {
     margin-bottom: dimensions.$gapSmall;
   }
 
-  @each $key, $val in colors.$specialColors {
-    .selected.#{$key} {
-      background-color: map.get($val, "background");
-      color: map.get($val, "foreground");
-      --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
-    }
+  /* Sélection : fond subtle + accent à gauche pour rester sobre */
+  .option.selected {
+    background-color: var(--bg-active);
+    color: var(--fg-strong);
+  }
+  .option.selected.danger {
+    color: var(--accent-red);
+  }
+  .option.selected.warning {
+    color: var(--accent-yellow);
   }
 
   .option :global(*) {
@@ -84,7 +94,9 @@
     margin: 0;
     padding: 0;
     flex-grow: 1;
-    text-align: center;
+    text-align: left;
+    font-size: var(--font-size-ui);
+    font-weight: var(--font-weight-medium);
   }
 </style>
 

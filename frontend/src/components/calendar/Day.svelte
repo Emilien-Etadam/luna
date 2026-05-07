@@ -58,8 +58,15 @@
     position: relative;
     font-size: var(--font-size-day-number);
     --gapBetweenDays: 0px;
-    border-right: 1px solid var(--border-default);
-    border-bottom: 1px solid var(--border-default);
+    border-right: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background-color var(--transition-fast);
+  }
+
+  /* Suppression de la double bordure au bord droit/bas de la grille
+     (le wrapper main fournit déjà une bordure) */
+  :global(div.days > div.day:nth-child(7n)) {
+    border-right: 0;
   }
 
   div.background {
@@ -67,44 +74,71 @@
     flex-direction: column;
     gap: 4px;
     margin: 0;
-    padding: 4px 6px;
-    border-radius: var(--radius-2);
+    padding: 6px 8px;
     background-color: var(--bg-editor);
     border: 0;
     height: 100%;
+    transition: background-color var(--transition-fast);
+  }
+
+  div.background.weekend {
+    background-color: var(--bg-weekend);
   }
 
   div.background.otherMonth {
-    background-color: var(--bg-editor);
+    background-color: var(--bg-other-month);
+  }
+
+  div.background.today {
+    background-color: var(--bg-today);
+  }
+
+  /* Hover doux sur la cellule entière (uniquement vue mois) */
+  div.day:hover div.background:not(.today) {
+    background-color: color-mix(in srgb, var(--tint-hover) 30%, var(--bg-editor));
+  }
+  div.day:hover div.background.weekend:not(.today) {
+    background-color: color-mix(in srgb, var(--tint-hover) 30%, var(--bg-weekend));
+  }
+  div.day:hover div.background.otherMonth:not(.today) {
+    background-color: color-mix(in srgb, var(--tint-hover) 30%, var(--bg-other-month));
   }
 
   span.top {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-areas: "none date add";
+    align-items: center;
+    min-height: 18px;
     font-size: var(--font-size-day-number);
   }
+
   span.date {
     position: relative;
     z-index: 0;
-    color: var(--fg-muted);
+    color: var(--fg-primary);
     font-size: var(--font-size-day-number);
+    font-variant-numeric: tabular-nums;
     font-weight: 400;
     text-align: center;
     width: 100%;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     grid-area: date;
     user-select: none;
+    line-height: 1;
   }
   span.date.weekend {
     color: var(--fg-muted);
   }
   span.date.otherMonth {
-    color: var(--fg-disabled);
+    color: var(--fg-other-month);
   }
+
   span.date.today {
-    color: var(--fg-strong);
-    font-weight: 600;
+    color: var(--fg-today);
+    font-weight: var(--font-weight-semibold);
   }
   span.date.today::before {
     content: "";
@@ -113,71 +147,73 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 1.5em;
-    height: 1.5em;
-    border-radius: var(--radius-2);
-    background-color: var(--bg-selection-active);
+    width: 20px;
+    height: 20px;
+    border-radius: var(--radius-pill);
+    background-color: var(--accent-blue);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-blue) 35%, transparent);
   }
+
   span.add {
     grid-area: add;
     display: flex;
     align-items: center;
     justify-content: right;
     opacity: 0;
-    transition: opacity animations.$animationSpeed;
+    transition: opacity var(--transition-fast);
   }
-  div.day:hover span.add {
+  div.day:hover span.add,
+  div.day:focus-within span.add {
     opacity: 1;
   }
 
   button.more {
     all: unset;
-    text-align: center;
-    color: color-mix(in srgb, colors.$foregroundSecondary 50%, transparent);
-    background-color: colors.$backgroundSecondary;
+    text-align: left;
+    color: var(--fg-muted);
+    background-color: transparent;
     cursor: pointer;
     z-index: 20;
-    margin: 0 var(--gapBetweenDays);
-    padding: dimensions.$gapSmaller 0;
+    margin: 2px var(--gapBetweenDays) 0;
+    padding: 2px 6px;
+    border-radius: var(--radius-1);
     position: relative;
-    border-top: 1px solid var(--border-default);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.2;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
 
-  button.otherMonth {
-    background-color: var(--bg-editor);
+  button.more:hover,
+  button.more:focus-visible {
+    background-color: var(--bg-hover);
+    color: var(--fg-primary);
   }
 
-  button.more.otherMonth::before {
-    content: "";
-    background-color: colors.$backgroundSecondary;
-    opacity: 0.5;
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    left: 0;
-    top: 0;
-    pointer-events: none;
+  button.more.otherMonth {
+    color: var(--fg-other-month);
   }
 
   div.events {
     position: absolute;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
 
-    --topMargin: calc(var(--font-size-day-number) + 20px);
+    --topMargin: calc(var(--font-size-day-number) + 16px);
     top: var(--topMargin);
     height: calc(100% - var(--topMargin) - var(--gapBetweenDays));
     width: 100%;
   }
-
-  //div.eventAnimation.hidden {
-  //  display: none;
-  //}
 </style>
 
 <div class="day">
-  <div class="background" class:otherMonth={!isCurrentMonth}>
+  <div
+    class="background"
+    class:otherMonth={!isCurrentMonth}
+    class:weekend={(date.getDay() === 0 || date.getDay() === 6) && isCurrentMonth}
+    class:today={isToday}
+  >
     <span class="top">
       <span
         class="date"

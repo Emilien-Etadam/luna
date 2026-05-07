@@ -326,14 +326,6 @@
   :global(body) {
     display: flex;
     flex-direction: row;
-    //display: grid;
-    //grid-template-columns: auto 1fr;
-    ////grid-template-rows: 1fr auto;
-    ////grid-template-areas:
-    ////  "aside main"
-    ////  "aside footer";
-    //grid-template-rows: auto;
-    //grid-template-areas: "aside main";
   }
 
   main {
@@ -343,9 +335,9 @@
     flex-direction: column;
     gap: 0;
     grid-area: main;
-    border: 1px solid var(--border-default);
     background-color: var(--bg-editor);
     overflow: hidden;
+    min-width: 0;
   }
   
   div.leftPane {
@@ -360,45 +352,55 @@
     max-width: 48px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 12px;
+    align-items: stretch;
+    gap: 4px;
     background-color: var(--bg-activity-bar);
     border: 0;
-    border-right: 1px solid var(--border-default);
-    padding: dimensions.$gapSmall 0;
-  }
-
-  nav.activityBar :global(button) {
-    color: var(--fg-muted);
-  }
-
-  nav.activityBar :global(button:hover),
-  nav.activityBar :global(button:focus-visible) {
-    color: var(--fg-strong);
+    border-right: 1px solid var(--border-subtle);
+    padding: 8px 6px;
   }
 
   button.activityIcon {
     all: unset;
-    width: 100%;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+    margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     color: var(--fg-muted);
-    border-left: 2px solid transparent;
+    border-radius: var(--radius-2);
     box-sizing: border-box;
+    position: relative;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
 
   button.activityIcon:hover {
     background-color: var(--bg-hover);
-    color: var(--fg-strong);
+    color: var(--fg-primary);
+  }
+
+  button.activityIcon:focus-visible {
+    box-shadow: var(--focus-ring);
+    color: var(--fg-primary);
   }
 
   button.activityIcon.active {
     color: var(--fg-strong);
-    border-left-color: var(--border-focus);
-    background-color: transparent;
+    background-color: var(--bg-active);
+  }
+
+  /* Marqueur d'actif : barre verticale subtile à gauche */
+  button.activityIcon.active::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    border-radius: var(--radius-pill);
+    background-color: var(--accent-blue);
   }
 
   aside.sidebar {
@@ -411,7 +413,7 @@
     grid-area: aside;
     background-color: var(--bg-side-bar);
     border: 0;
-    border-right: 1px solid var(--border-default);
+    border-right: 1px solid var(--border-subtle);
     padding: dimensions.$gapSmall;
   }
 
@@ -419,10 +421,10 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gapSmall;
+    gap: 2px;
     overflow: auto;
     margin: 0;
-    padding: dimensions.$gapTiny;
+    padding: dimensions.$gapTiny 0;
   }
 
   div.toprow {
@@ -432,32 +434,33 @@
     justify-content: space-between;
     margin: 0;
     align-items: center;
-    padding: dimensions.$gapSmall;
-    border-bottom: 1px solid var(--border-default);
+    height: 44px;
+    min-height: 44px;
+    padding: 0 dimensions.$gapSmall;
+    border-bottom: 1px solid var(--border-subtle);
     background-color: var(--bg-editor);
   }
 
   div.toprow :global(button),
   div.toprow :global(a) {
-    padding: dimensions.$paddingNavIcon;
-    color: var(--fg-primary);
+    color: var(--fg-muted);
   }
 
   div.toprow :global(button:hover),
   div.toprow :global(button:focus-visible),
   div.toprow :global(a:hover),
   div.toprow :global(a:focus-visible) {
-    background-color: var(--bg-hover);
     color: var(--fg-primary);
   }
 
   span.reachability {
-    color: colors.$backgroundFailure;
+    color: var(--accent-red);
     align-items: center;
     display: flex;
     flex-direction: row;
     justify-content: center;
-    gap: dimensions.$gapSmall;
+    gap: dimensions.$gapSmaller;
+    font-size: var(--font-size-sm);
   }
 
   span.refreshButtonWrapper {
@@ -471,25 +474,26 @@
   }
 
   span.copyright {
-    color: color-mix(in srgb, colors.$foregroundPrimary 50%, transparent);
-    font-size: text.$fontSizeSmall;
+    color: var(--fg-disabled);
+    font-size: var(--font-size-xs);
     text-align: center;
     margin-top: 0;
+    line-height: 1.4;
   }
 
   div.statusbar {
-    min-height: 22px;
-    height: 22px;
+    min-height: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0;
+    gap: dimensions.$gapSmall;
     padding: 0 dimensions.$gapSmall;
     background-color: var(--bg-status-bar);
-    color: var(--fg-strong);
+    color: var(--fg-muted);
     font-size: var(--font-size-status-bar);
     font-weight: 400;
-    border-top: 0;
+    border-top: 1px solid var(--border-subtle);
     white-space: nowrap;
     overflow: hidden;
   }
@@ -497,9 +501,10 @@
   div.statusbar span {
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 0 dimensions.$gapSmall;
+    padding: 0 dimensions.$gapSmaller;
   }
 
+  /* ============= Agenda ============= */
   section.agenda {
     position: relative;
     height: 100%;
@@ -508,37 +513,47 @@
     display: flex;
     flex-direction: column;
     gap: 0;
+    background-color: var(--bg-editor);
   }
 
   div.agendaDay {
-    border-bottom: 1px solid var(--border-default);
     background-color: transparent;
   }
 
   h3.agendaDate {
     margin: 0;
-    min-height: 26px;
+    min-height: 28px;
     box-sizing: border-box;
-    padding: 4px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--fg-primary);
-    background-color: var(--bg-row-alt);
-    border-bottom: 1px solid var(--border-default);
+    padding: 4px 16px;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-section-header);
+    letter-spacing: var(--letter-spacing-section-header);
+    text-transform: uppercase;
+    color: var(--fg-muted);
+    background-color: var(--bg-section-header);
+    border-bottom: 1px solid var(--border-subtle);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  div.agendaDay[data-agenda-today="true"] h3.agendaDate {
+    color: var(--accent-blue);
   }
 
   div.agendaItem {
     display: grid;
-    grid-template-columns: 60px 1fr;
-    column-gap: 12px;
+    grid-template-columns: 92px 1fr;
+    column-gap: 16px;
     align-items: center;
     box-sizing: border-box;
-    min-height: 28px;
-    padding: 4px 12px;
-    background-color: var(--bg-editor);
-    border-bottom: 1px solid var(--border-default);
+    min-height: 32px;
+    padding: 6px 16px;
+    background-color: transparent;
+    border-bottom: 1px solid var(--border-subtle);
     border-left: 0;
     cursor: pointer;
+    transition: background-color var(--transition-fast);
   }
 
   div.agendaItem:hover {
@@ -546,26 +561,27 @@
   }
 
   div.agendaItem:focus-visible {
-    outline: 1px solid var(--border-focus);
-    outline-offset: -1px;
+    outline: 0;
+    box-shadow: inset 0 0 0 2px var(--accent-blue);
   }
 
   span.agendaTime {
     color: var(--fg-muted);
     font-family: text.$fontFamilyTime;
     font-size: var(--font-size-event-time);
-    font-weight: 400;
-    width: 60px;
+    font-weight: var(--font-weight-medium);
+    font-variant-numeric: tabular-nums;
+    width: 92px;
     flex-shrink: 0;
   }
 
   span.agendaName {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     min-width: 0;
     font-size: var(--font-size-ui);
-    font-weight: 400;
+    font-weight: var(--font-weight-ui);
     color: var(--fg-primary);
     white-space: nowrap;
     overflow: hidden;
@@ -578,8 +594,37 @@
     height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent);
   }
 
+  div.agendaEmpty {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--fg-muted);
+    font-size: var(--font-size-sm);
+    font-style: italic;
+    padding: dimensions.$gapLarger;
+    text-align: center;
+  }
+
+  /* ============= Responsive ============= */
+  @media (max-width: 720px) {
+    aside.sidebar {
+      display: none;
+    }
+    nav.activityBar {
+      width: 44px;
+      min-width: 44px;
+    }
+    div.toprow {
+      padding: 0 dimensions.$gapSmaller;
+    }
+    span.reachability {
+      display: none;
+    }
+  }
 </style>
 
 {#if !publicReadonly}
@@ -680,8 +725,8 @@
   {#if view === "agenda"}
     <section class="agenda" bind:this={agendaContainer}>
       {#if agendaDays.length === 0}
-        <div class="agendaDay">
-          <h3 class="agendaDate">Aucun rendez-vous sur cette periode</h3>
+        <div class="agendaEmpty">
+          Aucun rendez-vous sur cette période.
         </div>
       {:else}
         {#each agendaDays as day (day.date.getTime())}

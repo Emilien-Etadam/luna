@@ -158,23 +158,32 @@
 
   button.select {
     all: unset;
-    padding: dimensions.$gapSmall;
-    border-radius: dimensions.$borderRadius;
-    background: transparent;
+    padding: 0 dimensions.$gapSmall;
+    height: var(--control-h-md);
+    border: 1px solid var(--border-default);
+    border-radius: var(--borderRadius);
+    background: var(--surface-base);
+    color: var(--fg-primary);
     display: flex;
     align-items: center;
     gap: dimensions.$gapSmall;
     justify-content: space-between;
     position: relative;
-    transition: padding animations.$animationSpeedFast linear, border-radius animations.$animationSpeedFast linear, width animations.$animationSpeedFast linear;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast),
+                background-color var(--transition-fast);
     overflow: hidden;
   }
 
   button.editable {
-    color: colors.$foregroundSecondary;
-    background: colors.$backgroundSecondary;
     cursor: pointer;
     user-select: none;
+  }
+  button.editable:hover {
+    border-color: var(--border-strong);
+  }
+  button.select:focus-visible {
+    border-color: var(--accent-blue);
+    box-shadow: var(--focus-ring);
   }
 
   select {
@@ -194,19 +203,19 @@
 
   div.options {
     position: absolute;
-    background-color: colors.$backgroundSecondary;
-    color: colors.$foregroundSecondary;
+    background-color: var(--surface-overlay);
+    color: var(--fg-primary);
     left: 0;
-    box-shadow: decorations.$boxShadow;
+    box-shadow: var(--shadow-2);
     z-index: 10;
-    border-radius: dimensions.$borderRadius;
+    border-radius: var(--borderRadius);
     display: flex;
     flex-direction: column;
     overflow: hidden;
 
     outline: 0;
-    border: 0;
-    padding: 0;
+    border: 1px solid var(--border-default);
+    padding: 4px;
     margin: 0;
     box-sizing: border-box;
   }
@@ -222,14 +231,21 @@
   button.option {
     all: unset;
     width: 100%;
-    transition: linear animations.$animationSpeedFast;
-    padding: dimensions.$gapSmall;
+    box-sizing: border-box;
+    transition: background-color var(--transition-fast);
+    padding: 6px 8px;
+    border-radius: var(--radius-1);
     cursor: pointer;
   }
 
   button.option:hover, button.option:focus {
-    color: colors.$foregroundTertiary;
-    background-color: colors.$backgroundTertiary;
+    background-color: var(--bg-hover);
+    color: var(--fg-strong);
+  }
+
+  button.option.selected {
+    background-color: var(--bg-selection-active);
+    color: var(--fg-strong);
   }
 
   div.wrapper {

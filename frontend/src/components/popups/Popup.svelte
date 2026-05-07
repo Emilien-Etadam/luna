@@ -82,20 +82,20 @@
   @use "../../styles/dimensions.scss";
 
   dialog {
-    border: 0;
-    padding: dimensions.$gapSmall dimensions.$gapLarge dimensions.$gapLarge dimensions.$gapLarge;
-    border-radius: dimensions.$borderRadius;
+    border: 1px solid var(--border-default);
+    padding: 12px;
+    border-radius: var(--borderRadius);
     max-width: 50vw;
     min-width: fit-content;
-    box-shadow: decorations.$boxShadow;
+    box-shadow: var(--shadow-2);
     position: absolute !important;
     z-index: 50;
-    background-color: colors.$backgroundSecondary;
-    color: colors.$foregroundSecondary;
+    background-color: var(--surface-raised);
+    color: var(--fg-primary);
   }
   :global(html[data-frost="true"]) dialog {
-    background-color: color-mix(in srgb, colors.$backgroundSecondary 50%, transparent) !important;
-    backdrop-filter: blur(dimensions.$blurLarge);
+    background-color: color-mix(in srgb, var(--surface-raised) 80%, transparent) !important;
+    backdrop-filter: blur(var(--overlay-blur));
   }
 
   dialog[open] {
