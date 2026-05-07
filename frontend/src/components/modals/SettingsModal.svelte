@@ -67,6 +67,9 @@
   // Loading
   let loaderAnimation = $state(false);
   function forceRefresh() {
+    if (appearanceOnly) {
+      return;
+    }
     loaderAnimation = true;
     fetchThemes();
     fetchFonts();
@@ -86,6 +89,10 @@
   // Show and hide hooks
   showModal = () => {
     saving = false;
+    if (appearanceOnly) {
+      selectedCategory = "appearance";
+      previousCategory = "appearance";
+    }
     snapshotSettings();
     forceRefresh();
     showModalInternal();
