@@ -96,13 +96,13 @@
 
     if (currentlyClickedEvent == event) {
       currentlyClickedEvent = null;
-      if (!readOnly) showModal(event).then(newEvent => event = newEvent).catch(NoOp);
+      showModal(event).then(newEvent => event = newEvent).catch(NoOp);
       element?.blur();
     }
   }
   function keyPress(e: KeyboardEvent) {
     passIfEnter(e, () => {
-      if (event && !readOnly) showModal(event).then(newEvent => event = newEvent).catch(NoOp);
+      if (event) showModal(event).then(newEvent => event = newEvent).catch(NoOp);
       element?.blur();
     });
   }

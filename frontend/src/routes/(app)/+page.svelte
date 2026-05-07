@@ -292,9 +292,9 @@
   <SourceWizardModal bind:showModal={showSourceWizardModal}/>
   <SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
   <CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
-  <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
   <DayViewModal bind:showModal={showDateModal}/>
 {/if}
+<EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
 <SettingsModal bind:showModal={showSettingsModal} appearanceOnly={publicReadonly}/>
 <CreditsModal bind:showModal={showCreditsModal}/>
 
@@ -317,10 +317,10 @@
       <IconButton click={showSourceWizardModal}>
         <PlusIcon/>
       </IconButton>
+      <IconButton click={showCreditsModal}>
+        <Copyleft/>
+      </IconButton>
     {/if}
-    <IconButton click={showCreditsModal}>
-      <Copyleft/>
-    </IconButton>
   </Horizontal>
 
   <span class="copyright">

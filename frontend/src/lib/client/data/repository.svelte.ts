@@ -226,6 +226,17 @@ export class Repository {
   }
 
   private compileEventsTimeout: (ReturnType<typeof setTimeout> | undefined) = undefined;
+  private resolveEventColor(event: EventModel): string {
+    if (event.color && event.color !== "") {
+      return event.color;
+    }
+    const calendar = this.calendarsMap.get(event.calendar);
+    if (calendar?.color) {
+      return calendar.color;
+    }
+    return "";
+  }
+
   private mergePublicDuplicateEvents(events: EventModel[]): EventModel[] {
     const byKey = new Map<string, EventModel>();
     for (const event of events) {
@@ -237,7 +248,7 @@ export class Repository {
       ].join("|");
 
       const existing = byKey.get(key);
-      const ownColor = event.color || null;
+      const ownColor = this.resolveEventColor(event) || null;
       if (!existing) {
         byKey.set(key, {
           ...event,
