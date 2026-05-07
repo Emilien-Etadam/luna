@@ -71,7 +71,7 @@
 
   div.circle {
     position: absolute;
-    background-color: var(--colorBackgroundHover, #{colors.$backgroundSecondary});
+    background-color: var(--colorBackgroundHover);
     z-index: -1;
     border-radius: dimensions.$borderRadiusSmall;
     left: 50%;
@@ -97,7 +97,7 @@
   }
 
   button:hover, button:focus, a:hover, a:focus {
-    color: colors.$foregroundSecondary;
+    color: var(--fg-primary);
   }
 </style>
 

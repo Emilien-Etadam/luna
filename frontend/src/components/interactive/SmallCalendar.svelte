@@ -84,7 +84,7 @@
   div.calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: dimensions.$gapSmall; 
+    gap: 4px;
     width: 100%;
   }
 
@@ -104,28 +104,45 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: dimensions.$borderRadiusSmall;
-    color: colors.$foregroundSecondary;
-    background-color: colors.$backgroundSecondary;
-    padding: dimensions.$gapSmaller;
+    border-radius: var(--radius-2);
+    font-size: var(--font-size-day-number);
+    font-weight: 400;
+    color: var(--fg-primary);
+    background-color: transparent;
+    padding: 4px;
     cursor: pointer;
     user-select: none;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
   }
 
-  button.day.sunday {
-    color: colors.$foregroundSunday;
+  button.day.weekend {
+    color: var(--fg-muted);
   }
 
   button.day.today {
-    background-color: colors.$backgroundAccent;
-    color: colors.$foregroundAccent !important;
-    --barFocusIndicatorColor: #{colors.$barFocusIndicatorColorAlt};
+    color: var(--fg-strong);
+    font-weight: 600;
+    background-color: transparent;
+    --barFocusIndicatorColor: var(--border-focus);
+  }
+
+  button.day.today::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: var(--radius-2);
+    background-color: var(--bg-selection-active);
   }
 
   button.day.otherMonth {
-    opacity: 0.5;
+    color: var(--fg-disabled);
+    opacity: 1;
   }
 </style>
 
@@ -145,13 +162,13 @@
     class:smaller={smaller}
     class:animate={animate}
     style="grid-template-rows: repeat({amountOfRows}, 1fr)"
-    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 100 : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 100 : 0}}
   >
     {#each days as day}
       <button
         class="day"
-        class:sunday={day.getDay() == 0}
+        class:weekend={day.getDay() === 0 || day.getDay() === 6}
         class:today={isSameDay(day, today)}
         class:otherMonth={day.getMonth() != currentDate.getMonth()}
         type="button"

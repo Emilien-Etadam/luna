@@ -56,60 +56,67 @@
     overflow: visible;
     height: 100%;
     position: relative;
-    font-size: text.$fontSizeSmall; // due to em units in the below variable being relative, we set the font size here already
+    font-size: var(--font-size-day-number);
     --gapBetweenDays: 0px;
-    border-right: 1px solid var(--colorBorderSubtle, #3a3a3a);
-    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
+    border-right: 1px solid var(--border-default);
+    border-bottom: 1px solid var(--border-default);
   }
 
   div.background {
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gapSmall;
+    gap: 4px;
     margin: 0;
-    padding: dimensions.$gapSmall;
-    border-radius: dimensions.$borderRadiusSmall;
-    background-color: colors.$backgroundSecondary;
+    padding: 4px 6px;
+    border-radius: var(--radius-2);
+    background-color: var(--bg-editor);
     border: 0;
     height: 100%;
   }
 
-  div.background.todayCell {
-    background-color: color-mix(in srgb, colors.$backgroundSecondary 76%, colors.$backgroundAccent);
+  div.background.otherMonth {
+    background-color: var(--bg-editor);
   }
 
   span.top {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-areas: "none date add";
-    font-size: text.$fontSize;
+    font-size: var(--font-size-day-number);
   }
   span.date {
-    color: colors.$foregroundSecondary;
+    position: relative;
+    z-index: 0;
+    color: var(--fg-muted);
+    font-size: var(--font-size-day-number);
+    font-weight: 400;
     text-align: center;
     width: 100%;
     display: block;
     grid-area: date;
     user-select: none;
-    z-index: 1;
   }
-  span.sunday {
-    color: colors.$foregroundSunday;
+  span.date.weekend {
+    color: var(--fg-muted);
   }
-  span.today {
-    color: colors.$foregroundAccent;
+  span.date.otherMonth {
+    color: var(--fg-disabled);
   }
-  span.today::before {
+  span.date.today {
+    color: var(--fg-strong);
+    font-weight: 600;
+  }
+  span.date.today::before {
     content: "";
-    background-color: colors.$backgroundAccent;
-    color: colors.$foregroundAccent;
     position: absolute;
-    width: calc(1.25 * text.$fontSize);
-    aspect-ratio: 1 / 1;
-    border-radius: dimensions.$borderRadiusSmall;
-    left: calc(50% - 1.25 * 0.5 * #{text.$fontSize});
-    top: translateY(calc(1.25 * 0.5 * text.$fontSize - #{dimensions.$gapSmall}));
     z-index: -1;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: var(--radius-2);
+    background-color: var(--bg-selection-active);
   }
   span.add {
     grid-area: add;
@@ -133,11 +140,11 @@
     margin: 0 var(--gapBetweenDays);
     padding: dimensions.$gapSmaller 0;
     position: relative;
-    border-top: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    border-top: 1px solid var(--border-default);
   }
 
   button.otherMonth {
-    background-color: colors.$backgroundPrimary;
+    background-color: var(--bg-editor);
   }
 
   button.more.otherMonth::before {
@@ -156,16 +163,12 @@
     position: absolute;
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gapTiny;
+    gap: 4px;
 
-    --topMargin: calc(#{text.$fontSize} + 2.5 * #{dimensions.$gapSmall});
+    --topMargin: calc(var(--font-size-day-number) + 20px);
     top: var(--topMargin);
     height: calc(100% - var(--topMargin) - var(--gapBetweenDays));
     width: 100%;
-  }
-
-  .otherMonth {
-    opacity: 0.5;
   }
 
   //div.eventAnimation.hidden {
@@ -174,9 +177,14 @@
 </style>
 
 <div class="day">
-  <div class="background" class:otherMonth={!isCurrentMonth} class:todayCell={isToday && view !== "day"}>
+  <div class="background" class:otherMonth={!isCurrentMonth}>
     <span class="top">
-      <span class="date" class:sunday={date.getDay() === 0} class:today={isToday}>
+      <span
+        class="date"
+        class:weekend={date.getDay() === 0 || date.getDay() === 6}
+        class:today={isToday}
+        class:otherMonth={!isCurrentMonth}
+      >
         {date.getDate()}
       </span>
       {#if !readOnly}

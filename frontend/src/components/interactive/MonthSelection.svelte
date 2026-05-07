@@ -73,6 +73,16 @@
     all: unset;
     cursor: pointer;
     position: relative;
+    font-size: var(--font-size-ui);
+    font-weight: 400;
+    color: var(--fg-primary);
+    padding: 2px 4px;
+    border-radius: var(--radius-2);
+  }
+
+  button:hover,
+  button:focus-visible {
+    background-color: var(--bg-hover);
   }
 </style>
 

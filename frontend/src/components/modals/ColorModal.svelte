@@ -227,7 +227,7 @@
   }
   div.pickerBackground {
     grid-area: hSL;
-    background-color: #ffffff;
+    background-color: var(--bg-color-picker-sl);
     width: 100%;
     height: 100%;
     border-radius: dimensions.$borderRadius;

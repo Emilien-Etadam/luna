@@ -1,7 +1,7 @@
 @use "./colors.scss";
 
-/* Shadow */
-$boxShadow: rgba(0, 0, 0, 0.24) 0px 0.1em 0.3em;
+/* Ombres désactivées (spec VS Code Dark+ ; overlays peuvent rester visibles via bordure) */
+$boxShadow: none;
 
 /* "Default color" gradient */
 $stripesSize: 10px;

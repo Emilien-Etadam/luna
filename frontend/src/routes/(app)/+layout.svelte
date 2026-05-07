@@ -117,20 +117,14 @@
   $effect(() => { setTimeout((val) => previousThemeLight = val, 100, currentThemeLight); });
   $effect(() => { setTimeout((val) => previousThemeDark = val, 100, currentThemeDark); });
 
-  // Locked font stack (VS Code-like) - no user font selection.
-  const vscodeUiFontStack = `-apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
-  const vscodeMonoFontStack = `"Consolas", "Courier New", monospace`;
-
-  // CSS variables based on preferences
+  // Accent utilisateur : boutons / sélection d’accent uniquement (tokens pour le reste).
   let style = $derived(`
     <style>
       :root {
         --accentColor: ${theme.getAccentColor()};
         --accentColorRgb: ${hexToRgb(theme.getAccentColor()).join(", ")};
         --colorBackgroundAccent: ${theme.getAccentColor()};
-        --colorForegroundAccent: #ffffff;
-        --colorForegroundLink: ${theme.getAccentColor()};
-        --colorBackgroundSelection: rgba(${hexToRgb(theme.getAccentColor()).join(", ")}, 0.38);
+        --colorForegroundAccent: var(--fg-strong);
 
         --uiScaling: ${settings.userSettings[UserSettingKeys.UiScaling]};
 
@@ -139,9 +133,6 @@
           --borderRadius: 0;\
           --borderRadiusLarge: 0;\
         "}
-
-        --fontFamilyText: ${vscodeUiFontStack};
-        --fontFamilyTime: ${vscodeMonoFontStack};
 
         --animationSpeedMultiplier: ${settings.userSettings[UserSettingKeys.AnimationDuration]};
       }
@@ -174,27 +165,8 @@
   }
 
   :global(*:focus-visible) {
-    outline: 1px solid colors.$backgroundAccent;
+    outline: 1px solid var(--border-focus);
     outline-offset: 0;
-  }
-
-  :global(*) {
-    scrollbar-width: thin;
-    scrollbar-color: color-mix(in srgb, colors.$foregroundSecondary 45%, transparent) transparent;
-  }
-
-  :global(*::-webkit-scrollbar) {
-    width: 10px;
-    height: 10px;
-  }
-
-  :global(*::-webkit-scrollbar-thumb) {
-    background-color: color-mix(in srgb, colors.$foregroundSecondary 35%, transparent);
-    border-radius: dimensions.$borderRadiusSmall;
-  }
-
-  :global(*::-webkit-scrollbar-thumb:hover) {
-    background-color: color-mix(in srgb, colors.$foregroundSecondary 65%, transparent);
   }
 
   div.notifications {

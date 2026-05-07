@@ -58,18 +58,18 @@
   div.calendarEntry {
     display: flex;
     flex-direction: row;
-    gap: dimensions.$gapTiny;
+    gap: 8px;
     width: 100%;
     align-items: center;
     justify-content: space-between;
     user-select: none;
     cursor: grab;
     padding: dimensions.$gapTiny dimensions.$gapSmaller;
-    border-radius: dimensions.$borderRadiusSmall;
+    border-radius: var(--radius-2);
   }
 
   div.calendarEntry:hover {
-    background-color: var(--colorBackgroundHover, #{colors.$backgroundSecondary});
+    background-color: var(--colorBackgroundHover);
   }
 
   span {
@@ -100,6 +100,9 @@
   }
 
   span.calendarName {
+    font-size: var(--font-size-ui);
+    font-weight: 400;
+    color: var(--fg-primary);
     text-wrap: nowrap;
     text-overflow: ellipsis;
     min-width: 0;

@@ -58,20 +58,29 @@
   @use "../../styles/colors.scss";
 
   div {
-    color: color-mix(in srgb, colors.$foregroundPrimary 75%, transparent);
-    height: 1.25em;
+    color: var(--fg-primary);
+    min-height: 1.25em;
     display: flex;
     justify-content: space-between;
     align-items: center;
     align-content: center;
     user-select: none;
     padding: dimensions.$gapTiny dimensions.$gapSmaller;
-    border-radius: dimensions.$borderRadiusSmall;
+    border-radius: var(--radius-2);
+  }
+
+  div :global(button),
+  div .sourceName {
+    font-size: var(--font-size-section-header);
+    font-weight: var(--font-weight-section-header);
+    letter-spacing: var(--letter-spacing-section-header);
+    text-transform: uppercase;
+    color: var(--fg-primary);
   }
 
   div:hover {
-    background-color: var(--colorBackgroundHover, #{colors.$backgroundSecondary});
-    color: colors.$foregroundPrimary;
+    background-color: var(--colorBackgroundHover);
+    color: var(--fg-primary);
   }
 
   span {

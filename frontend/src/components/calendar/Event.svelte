@@ -115,13 +115,15 @@
   @use "../../styles/text.scss";
 
   div {
-    padding: dimensions.$gapSmaller;
-    padding-left: calc(var(--gapBetweenDays) + dimensions.$gapSmaller);
-    font-size: text.$fontSizeSmall;
+    box-sizing: border-box;
+    min-height: 18px;
+    padding: 2px 4px;
+    padding-left: calc(var(--gapBetweenDays) + 4px);
+    font-size: var(--font-size-ui);
     margin: 0;
 
     display: flex;
-    gap: dimensions.$gapTiny;
+    gap: 6px;
     flex-direction: row;
     flex-wrap: nowrap;
     align-items: center;
@@ -150,14 +152,14 @@
     visibility: hidden;
   }
   div.start {
-    border-top-left-radius: dimensions.$borderRadius;
-    border-bottom-left-radius: dimensions.$borderRadius;
+    border-top-left-radius: var(--radius-2);
+    border-bottom-left-radius: var(--radius-2);
     margin-left: var(--gapBetweenDays);
-    padding-left: dimensions.$gapSmaller;
+    padding-left: 4px;
   }
   div.end {
-    border-top-right-radius: dimensions.$borderRadius;
-    border-bottom-right-radius: dimensions.$borderRadius;
+    border-top-right-radius: var(--radius-2);
+    border-bottom-right-radius: var(--radius-2);
     margin-right: var(--gapBetweenDays);
   }
 
@@ -177,13 +179,16 @@
     overflow: hidden;
     min-width: 0;
     flex-shrink: 1;
+    font-size: var(--font-size-ui);
+    font-weight: 400;
   }
   span.time {
     flex-shrink: 0;
     text-align: center;
-    font-weight: text.$fontWeightSemiBold;
+    font-weight: 400;
     font-family: text.$fontFamilyTime;
-    font-size: text.$fontSizeSmall;
+    font-size: var(--font-size-event-time);
+    color: var(--fg-muted);
   }
   span.icons {
     flex-shrink: 0;
@@ -194,18 +199,24 @@
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
   }
 
   div.onlyCircle {
     background-color: transparent !important;
-    color: colors.$foregroundSecondary !important;
+    color: var(--fg-muted) !important;
   }
 
-  div.hover,
+  div.hover {
+    border-left-color: transparent;
+    background-color: var(--bg-hover) !important;
+    color: var(--fg-primary) !important;
+  }
+
   div.active {
-    border-left-color: colors.$backgroundAccent;
-    background-color: var(--colorBackgroundSelection, #{colors.$backgroundSecondary}) !important;
+    border-left-color: var(--border-focus);
+    background-color: var(--bg-selection-active) !important;
+    color: var(--fg-strong) !important;
   }
 </style>
 

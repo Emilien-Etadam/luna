@@ -17,5 +17,5 @@
 </script>
 
 <IconButton click={toggleCollapse} style="transform: rotate({collapsed ? "-90deg" : "0deg"})">
-  <ChevronDown size={16}/>
+  <ChevronDown size={12}/>
 </IconButton>

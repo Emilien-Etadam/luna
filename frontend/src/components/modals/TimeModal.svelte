@@ -126,7 +126,7 @@
     align-items: center;
     width: 100%;
     margin-top: 5em;
-    margin-bottom: 7em + dimensions.$gapSmall;
+    margin-bottom: calc(7em + #{dimensions.$gapSmall});
     font-family: text.$fontFamilyTime;
   }
 

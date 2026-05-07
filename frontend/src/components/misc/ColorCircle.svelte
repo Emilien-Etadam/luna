@@ -27,8 +27,8 @@
   }
 
   div.small {
-    width: 0.75em;
-    height: 0.75em;
+    width: 8px;
+    height: 8px;
   }
 
   div.medium {

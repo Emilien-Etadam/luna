@@ -1,21 +1,21 @@
 @use "./dimensions.scss";
 
-/* Font family */
-$fontFamilyText: var(--fontFamilyText, -apple-system, "Segoe UI", system-ui, sans-serif);
-$fontFamilyTime: var(--fontFamilyTime, "Atkinson Hyperlegible Mono");
+/* Font family (tokens) */
+$fontFamilyText: var(--fontFamilyText);
+$fontFamilyTime: var(--fontFamilyTime);
 
-/* Font size ratios */
+/* Font size ratios (dérivés de l’échelle UI) */
 $fontSizeSmallerRatio: 0.6;
 $fontSizeSmallRatio: 0.8;
 $fontSizeLargeRatio: 1.5;
 $fontSizeLargerRatio: 2;
 
-/* Font size (dense, VS Code-like baseline) */
-$fontSizeSmaller: calc(0.55rem * #{dimensions.$multiplier});
-$fontSizeSmall: calc(0.72rem * #{dimensions.$multiplier});
-$fontSize: calc(0.8125rem * #{dimensions.$multiplier});
-$fontSizeLarge: calc(1.5rem * #{dimensions.$multiplier});
-$fontSizeLarger: calc(2rem * #{dimensions.$multiplier});
+/* Tailles — base 13px via tokens */
+$fontSizeSmaller: calc(var(--font-size-ui) * #{$fontSizeSmallerRatio} * #{dimensions.$multiplier});
+$fontSizeSmall: calc(var(--font-size-event-time) * #{dimensions.$multiplier});
+$fontSize: calc(var(--font-size-ui) * #{dimensions.$multiplier});
+$fontSizeLarge: calc(var(--font-size-ui) * #{$fontSizeLargeRatio} * #{dimensions.$multiplier});
+$fontSizeLarger: calc(var(--font-size-ui) * #{$fontSizeLargerRatio} * #{dimensions.$multiplier});
 
 $fontSizeTitle: $fontSizeLarger;
 $fontSizeSubtitle: $fontSizeLarge;
@@ -28,6 +28,5 @@ $fontWeightBold: calc(700 * #{dimensions.$multiplier});
 $fontWeightEmphasis: calc(350 * #{dimensions.$multiplier});
 $fontWeightTitle: calc(600 * #{dimensions.$multiplier});
 
-/* Line height */
-$lineHeightParagraph: calc($fontSize * 1.4);
-
+/* Line height (longueur pour composants qui dimensionnent en px) */
+$lineHeightParagraph: calc(var(--font-size-ui) * var(--line-height-ui));

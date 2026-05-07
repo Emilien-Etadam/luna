@@ -312,10 +312,10 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gapSmall;
+    gap: 0;
     grid-area: main;
-    border: 1px solid var(--colorBorderSubtle, #3a3a3a);
-    background-color: colors.$backgroundPrimary;
+    border: 1px solid var(--border-default);
+    background-color: var(--bg-editor);
     overflow: hidden;
   }
   
@@ -332,33 +332,44 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: dimensions.$gapSmall;
-    background-color: colors.$backgroundTertiary;
-    border: 1px solid var(--colorBorderSubtle, #3a3a3a);
-    padding: dimensions.$gapSmall dimensions.$gapSmaller;
+    gap: 12px;
+    background-color: var(--bg-activity-bar);
+    border: 0;
+    border-right: 1px solid var(--border-default);
+    padding: dimensions.$gapSmall 0;
+  }
+
+  nav.activityBar :global(button) {
+    color: var(--fg-muted);
+  }
+
+  nav.activityBar :global(button:hover),
+  nav.activityBar :global(button:focus-visible) {
+    color: var(--fg-strong);
   }
 
   button.activityIcon {
     all: unset;
     width: 100%;
-    height: 34px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: colors.$foregroundSecondary;
+    color: var(--fg-muted);
     border-left: 2px solid transparent;
+    box-sizing: border-box;
   }
 
   button.activityIcon:hover {
-    background-color: var(--colorBackgroundHover, #2a2d2e);
-    color: colors.$foregroundPrimary;
+    background-color: var(--bg-hover);
+    color: var(--fg-strong);
   }
 
   button.activityIcon.active {
-    color: colors.$foregroundPrimary;
-    border-left-color: colors.$backgroundAccent;
-    background-color: var(--colorBackgroundSelection, #094771);
+    color: var(--fg-strong);
+    border-left-color: var(--border-focus);
+    background-color: transparent;
   }
 
   aside.sidebar {
@@ -369,11 +380,9 @@
     width: 15em;
     max-width: 15em;
     grid-area: aside;
-    background-color: colors.$backgroundSecondary;
-    border-top: 1px solid var(--colorBorderSubtle, #3a3a3a);
-    border-right: 1px solid var(--colorBorderSubtle, #3a3a3a);
-    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
-    border-left: 0;
+    background-color: var(--bg-side-bar);
+    border: 0;
+    border-right: 1px solid var(--border-default);
     padding: dimensions.$gapSmall;
   }
 
@@ -395,8 +404,22 @@
     margin: 0;
     align-items: center;
     padding: dimensions.$gapSmall;
-    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
-    background-color: colors.$backgroundTertiary;
+    border-bottom: 1px solid var(--border-default);
+    background-color: var(--bg-editor);
+  }
+
+  div.toprow :global(button),
+  div.toprow :global(a) {
+    padding: dimensions.$paddingNavIcon;
+    color: var(--fg-primary);
+  }
+
+  div.toprow :global(button:hover),
+  div.toprow :global(button:focus-visible),
+  div.toprow :global(a:hover),
+  div.toprow :global(a:focus-visible) {
+    background-color: var(--bg-hover);
+    color: var(--fg-primary);
   }
 
   span.reachability {
@@ -431,12 +454,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: dimensions.$gapMiddle;
+    gap: 0;
     padding: 0 dimensions.$gapSmall;
-    background-color: colors.$backgroundAccent;
-    color: colors.$foregroundAccent;
-    font-size: text.$fontSizeSmall;
-    border-top: 1px solid color-mix(in srgb, colors.$foregroundAccent 30%, transparent);
+    background-color: var(--bg-status-bar);
+    color: var(--fg-strong);
+    font-size: var(--font-size-status-bar);
+    font-weight: 400;
+    border-top: 0;
     white-space: nowrap;
     overflow: hidden;
   }
@@ -444,6 +468,7 @@
   div.statusbar span {
     overflow: hidden;
     text-overflow: ellipsis;
+    padding: 0 dimensions.$gapSmall;
   }
 
   section.agenda {
@@ -456,55 +481,71 @@
   }
 
   div.agendaDay {
-    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
-    background-color: colors.$backgroundSecondary;
+    border-bottom: 1px solid var(--border-default);
+    background-color: transparent;
   }
 
   h3.agendaDate {
     margin: 0;
-    padding: dimensions.$gapSmall;
-    font-size: text.$fontSize;
-    font-weight: text.$fontWeightTitle;
-    background-color: colors.$backgroundTertiary;
-    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
+    min-height: 26px;
+    box-sizing: border-box;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg-primary);
+    background-color: var(--bg-row-alt);
+    border-bottom: 1px solid var(--border-default);
   }
 
   div.agendaItem {
     display: grid;
-    grid-template-columns: 4.5em 1fr;
-    gap: dimensions.$gapSmall;
+    grid-template-columns: 60px 1fr;
+    column-gap: 12px;
     align-items: center;
-    padding: dimensions.$gapSmaller dimensions.$gapSmall;
-    border-left: 2px solid colors.$backgroundAccent;
+    box-sizing: border-box;
+    min-height: 28px;
+    padding: 4px 12px;
+    background-color: var(--bg-editor);
+    border-bottom: 1px solid var(--border-default);
+    border-left: 0;
     cursor: pointer;
   }
 
   div.agendaItem:hover {
-    background-color: var(--colorBackgroundHover, #2a2d2e);
+    background-color: var(--bg-hover);
   }
 
   div.agendaItem:focus-visible {
-    outline: 1px solid colors.$backgroundAccent;
+    outline: 1px solid var(--border-focus);
     outline-offset: -1px;
   }
 
   span.agendaTime {
-    color: colors.$foregroundSecondary;
+    color: var(--fg-muted);
     font-family: text.$fontFamilyTime;
-    font-size: text.$fontSize;
-    font-weight: text.$fontWeightSemiBold;
+    font-size: var(--font-size-event-time);
+    font-weight: 400;
+    width: 60px;
+    flex-shrink: 0;
   }
 
   span.agendaName {
     display: inline-flex;
     align-items: center;
-    gap: dimensions.$gapSmall;
+    gap: 8px;
+    min-width: 0;
+    font-size: var(--font-size-ui);
+    font-weight: 400;
+    color: var(--fg-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   span.eventDot {
     display: inline-block;
-    width: 0.55em;
-    height: 0.55em;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
   }

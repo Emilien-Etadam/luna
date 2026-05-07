@@ -153,7 +153,7 @@
   // 9: gap between events
   // 27: height of an event
   // Fallback to 1 while the first-cell height is not measured yet, to avoid rendering only "and X more" bars.
-  let maxEvents: number = $derived(containerHeight === 0 ? 1 : Math.max(Math.floor((containerHeight + 9) / 27), 1));
+  let maxEvents: number = $derived(containerHeight === 0 ? 1 : Math.max(Math.floor((containerHeight + 4) / 22), 1));
 
   /* Show more */
   let showDateModal: ((date: Date, events: (EventModel | null)[]) => any) = getContext("showDateModal");
@@ -179,13 +179,24 @@
     display: grid;
     gap: 0;
     margin: 0;
-    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
+    border-bottom: 1px solid var(--border-default);
   }
   div.weekday {
-    text-align: center;
+    height: 28px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    text-align: left;
+    background-color: var(--bg-section-header);
+    font-size: var(--font-size-section-header);
+    font-weight: var(--font-weight-section-header);
+    letter-spacing: var(--letter-spacing-section-header);
+    text-transform: uppercase;
+    color: var(--fg-primary);
   }
   div.weekdays.padded {
-    padding-left: calc(1.7em + dimensions.$gapSmaller);
+    padding-left: calc(1.7em + #{dimensions.$gapSmaller});
   }
 
   div.monthAnimation {
@@ -234,10 +245,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: colors.$backgroundSecondary;
+    background-color: var(--bg-section-header);
     margin: 0;
     border-radius: 0;
-    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
+    border-bottom: 1px solid var(--border-default);
+    color: var(--fg-muted);
+    font-size: var(--font-size-day-number);
   }
 
   div.weekNumber.otherMonth {
@@ -306,8 +319,8 @@
     class:columns-month={view === "month"}
     class:columns-week={view === "week"}
     class:columns-day={view === "day"}
-    in:svelteFlyInHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
-    out:svelteFlyOutHorizontal={{duration: animate ? 500 * settings.userSettings[UserSettingKeys.AnimationDuration] : 0}}
+    in:svelteFlyInHorizontal={{duration: animate ? 100 : 0}}
+    out:svelteFlyOutHorizontal={{duration: animate ? 100 : 0}}
   >
     {#each days as day, i}
       <Day

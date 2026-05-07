@@ -1,31 +1,32 @@
-/* Main colors */
-$foregroundDark: var(--colorForegroundDark, #000000);
-$foregroundBright: var(--colorForegroundBright, #ffffff);
-$foregroundLink: var(--colorForegroundLink, hsl(213, 69%, 42%));
+/* Couleurs : uniquement des var() définies dans /theme/tokens.css */
 
-$backgroundPrimary: var(--colorBackgroundPrimary, #ffffff);
-$foregroundPrimary: var(--colorForegroundPrimary, $foregroundDark);
+$foregroundDark: var(--colorForegroundDark);
+$foregroundBright: var(--colorForegroundBright);
+$foregroundLink: var(--colorForegroundLink);
 
-$backgroundSecondary: var(--colorBackgroundSecondary, #f0f0f0);
-$foregroundSecondary: var(--colorForegroundSecondary, $foregroundPrimary);
+$backgroundPrimary: var(--colorBackgroundPrimary);
+$foregroundPrimary: var(--colorForegroundPrimary);
 
-$backgroundTertiary: var(--colorBackgroundTertiary, #e0e0e0);
-$foregroundTertiary: var(--colorForegroundTertiary, $foregroundSecondary);
+$backgroundSecondary: var(--colorBackgroundSecondary);
+$foregroundSecondary: var(--colorForegroundSecondary);
 
-$backgroundSuccess: var(--colorBackgroundSuccess, hsl(107, 53%, 47%));
-$foregroundSuccess: var(--colorForegroundSuccess, $foregroundBright);
+$backgroundTertiary: var(--colorBackgroundTertiary);
+$foregroundTertiary: var(--colorForegroundTertiary);
 
-$backgroundWarning: var(--colorBackgroundWarning, hsl(39, 100%, 50%));
-$foregroundWarning: $foregroundBright;
+$backgroundSuccess: var(--colorBackgroundSuccess);
+$foregroundSuccess: var(--colorForegroundSuccess);
 
-$backgroundFailure: var(--colorBackgroundDanger, hsl(0, 69%, 62%));
-$foregroundFailure: var(--colorForegroundDanger, $foregroundBright);
+$backgroundWarning: var(--colorBackgroundWarning);
+$foregroundWarning: var(--colorForegroundWarning);
 
-$backgroundAccent: var(--colorBackgroundAccent, hsl(213, 69%, 62%));
-$foregroundAccent: var(--colorForegroundAccent, $foregroundBright);
+$backgroundFailure: var(--colorBackgroundDanger);
+$foregroundFailure: var(--colorForegroundDanger);
 
-/* Calendar colors */
-$foregroundSunday: var(--colorForegroundSunday, hsl(0, 71%, 58%));
+$backgroundAccent: var(--colorBackgroundAccent);
+$foregroundAccent: var(--colorForegroundAccent);
+
+/* Calendrier */
+$foregroundSunday: var(--colorForegroundSunday);
 
 /* Notification and button colors */
 $specialColors: (
@@ -56,7 +57,7 @@ $specialColors: (
 );
 
 /* Decoration */
-$barFocusIndicatorColor: $backgroundAccent;
-$barFocusIndicatorColorAlt: $backgroundSecondary;
+$barFocusIndicatorColor: var(--border-focus);
+$barFocusIndicatorColorAlt: var(--bg-side-bar);
 
 $underlineFocusIndicatorColor: currentColor;
