@@ -169,7 +169,7 @@
   div.calendar {
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gapSmall;
+    gap: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
@@ -177,8 +177,9 @@
 
   div.weekdays {
     display: grid;
-    gap: dimensions.$gapSmall;
-    margin: 0 dimensions.$gapSmaller;
+    gap: 0;
+    margin: 0;
+    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
   }
   div.weekday {
     text-align: center;
@@ -219,7 +220,7 @@
   div.weekNumbersWrapper {
     display: flex;
     flex-direction: row;
-    gap: dimensions.$gapSmaller;
+    gap: 0;
     flex-grow: 1;
   }
 
@@ -234,8 +235,9 @@
     justify-content: center;
     align-items: center;
     background-color: colors.$backgroundSecondary;
-    margin: dimensions.$gapSmaller 0;
-    border-radius: dimensions.$borderRadiusSmall;
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
   }
 
   div.weekNumber.otherMonth {

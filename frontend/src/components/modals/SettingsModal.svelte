@@ -522,7 +522,6 @@
       {:else if selectedCategory === "appearance"}
         <AppearanceSettingsTab
           settings={settings}
-          fonts={fonts}
           bind:accentColor={accentColor}
         />
       {:else if selectedCategory === "developer"}

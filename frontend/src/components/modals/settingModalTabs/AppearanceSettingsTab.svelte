@@ -6,17 +6,14 @@
   import SliderInput from "../../forms/SliderInput.svelte";
   import ToggleInput from "../../forms/ToggleInput.svelte";
   import SectionDivider from "../../layout/SectionDivider.svelte";
-  import type { Option } from "../../../types/options";
 
   interface Props {
     settings: Settings;
-    fonts: Option<string>[];
     accentColor: string;
   }
 
   let {
     settings,
-    fonts,
     accentColor = $bindable(),
   }: Props = $props();
 </script>
@@ -97,18 +94,6 @@
   name={UserSettingKeys.ThemeSynchronize}
   description="Synchronize Theme with System"
   bind:value={settings.userSettings[UserSettingKeys.ThemeSynchronize]}
-/>
-<SelectInput
-  name={UserSettingKeys.FontText}
-  placeholder="Text Font"
-  bind:value={settings.userSettings[UserSettingKeys.FontText]}
-  options={fonts}
-/>
-<SelectInput
-  name={UserSettingKeys.FontTime}
-  placeholder="Monospaced Font"
-  bind:value={settings.userSettings[UserSettingKeys.FontTime]}
-  options={fonts}
 />
 <SectionDivider title="Animations"/>
 <SliderInput

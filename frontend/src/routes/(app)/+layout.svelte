@@ -117,24 +117,13 @@
   $effect(() => { setTimeout((val) => previousThemeLight = val, 100, currentThemeLight); });
   $effect(() => { setTimeout((val) => previousThemeDark = val, 100, currentThemeDark); });
 
-  // Font loading
-  let currentFontText = $derived(settings.userSettings[UserSettingKeys.FontText]);
-  let currentFontTime = $derived(settings.userSettings[UserSettingKeys.FontTime]);
-  let currentFontTextName = $derived(currentFontText.split("-").map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(" "));
-  let currentFontTimeName = $derived(currentFontTime.split("-").map(x => x.charAt(0).toUpperCase() + x.slice(1)).join(" "));
+  // Locked font stack (VS Code-like) - no user font selection.
+  const vscodeUiFontStack = `-apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
+  const vscodeMonoFontStack = `"Consolas", "Courier New", monospace`;
 
   // CSS variables based on preferences
   let style = $derived(`
     <style>
-      @font-face {
-        font-family: "${currentFontTextName}"; 
-        src: url("/fonts/${currentFontText}.ttf");
-      }
-      @font-face {
-        font-family: "${currentFontTimeName}"; 
-        src: url("/fonts/${currentFontTime}.ttf");
-      }
-
       :root {
         --accentColor: ${theme.getAccentColor()};
         --accentColorRgb: ${hexToRgb(theme.getAccentColor()).join(", ")};
@@ -151,8 +140,8 @@
           --borderRadiusLarge: 0;\
         "}
 
-        --fontFamilyText: ${currentFontTextName};
-        --fontFamilyTime: ${currentFontTimeName};
+        --fontFamilyText: ${vscodeUiFontStack};
+        --fontFamilyTime: ${vscodeMonoFontStack};
 
         --animationSpeedMultiplier: ${settings.userSettings[UserSettingKeys.AnimationDuration]};
       }
@@ -171,8 +160,8 @@
 
   :global(body) {
     margin: 0;
-    padding: dimensions.$gapSmall;
-    gap: dimensions.$gapSmall;
+    padding: 0;
+    gap: 0;
 
     height: 100vh;
     width: 100vw;

@@ -259,6 +259,16 @@
   });
 
   const calendarGranularity = $derived(view === "agenda" ? "month" : view);
+  const todayKey = $derived(new Date().toISOString().split("T")[0]);
+  let agendaContainer: HTMLElement | null = $state(null);
+
+  $effect(() => {
+    if (view !== "agenda") return;
+    setTimeout(() => {
+      const todayRow = agendaContainer?.querySelector<HTMLElement>("[data-agenda-today='true']");
+      todayRow?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }, 0);
+  });
 
   function openAgendaEvent(event: EventModel) {
     showEventModal(event).then((updatedEvent: EventModel) => event = updatedEvent).catch(NoOp);
@@ -298,7 +308,7 @@
     flex-direction: column;
     gap: dimensions.$gapSmall;
     grid-area: main;
-    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    border: 1px solid var(--colorBorderSubtle, #3a3a3a);
     background-color: colors.$backgroundPrimary;
     overflow: hidden;
   }
@@ -306,7 +316,7 @@
   div.leftPane {
     display: flex;
     flex-direction: row;
-    gap: dimensions.$gapSmall;
+    gap: 0;
   }
 
   nav.activityBar {
@@ -318,7 +328,7 @@
     align-items: center;
     gap: dimensions.$gapSmall;
     background-color: colors.$backgroundTertiary;
-    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    border: 1px solid var(--colorBorderSubtle, #3a3a3a);
     padding: dimensions.$gapSmall dimensions.$gapSmaller;
   }
 
@@ -354,7 +364,10 @@
     max-width: 15em;
     grid-area: aside;
     background-color: colors.$backgroundSecondary;
-    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    border-top: 1px solid var(--colorBorderSubtle, #3a3a3a);
+    border-right: 1px solid var(--colorBorderSubtle, #3a3a3a);
+    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
+    border-left: 0;
     padding: dimensions.$gapSmall;
   }
 
@@ -376,7 +389,7 @@
     margin: 0;
     align-items: center;
     padding: dimensions.$gapSmall;
-    border-bottom: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
     background-color: colors.$backgroundTertiary;
   }
 
@@ -430,14 +443,14 @@
   section.agenda {
     height: 100%;
     overflow-y: auto;
-    padding: dimensions.$gapSmall;
+    padding: 0;
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gapSmall;
+    gap: 0;
   }
 
   div.agendaDay {
-    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
     background-color: colors.$backgroundSecondary;
   }
 
@@ -447,7 +460,7 @@
     font-size: text.$fontSize;
     font-weight: text.$fontWeightTitle;
     background-color: colors.$backgroundTertiary;
-    border-bottom: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
   }
 
   div.agendaItem {
@@ -512,7 +525,7 @@
     <button class="activityIcon" class:active={view === "day"} onclick={() => view = "day"} title="Jour">
       <CalendarSingle size={16}/>
     </button>
-    <button class="activityIcon" class:active={view === "agenda"} onclick={() => view = "agenda"} title="Agenda">
+    <button class="activityIcon" class:active={view === "agenda"} onclick={() => { date = new Date(); view = "agenda"; }} title="Agenda">
       <List size={16}/>
     </button>
   </nav>
@@ -589,14 +602,17 @@
     </Horizontal>
   </div>
   {#if view === "agenda"}
-    <section class="agenda">
+    <section class="agenda" bind:this={agendaContainer}>
       {#if agendaDays.length === 0}
         <div class="agendaDay">
           <h3 class="agendaDate">Aucun rendez-vous sur cette periode</h3>
         </div>
       {:else}
         {#each agendaDays as day (day.date.getTime())}
-          <div class="agendaDay">
+          <div
+            class="agendaDay"
+            data-agenda-today={day.date.toISOString().split("T")[0] === todayKey ? "true" : "false"}
+          >
             <h3 class="agendaDate">{day.date.toLocaleDateString([], { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</h3>
             {#each day.events as event (event.id + event.date.start.getTime())}
               <div

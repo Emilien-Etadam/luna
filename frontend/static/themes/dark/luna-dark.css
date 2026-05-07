@@ -1,15 +1,15 @@
 html[data-theme="dark"] {
   --colorForegroundDark: #000000;
-  --colorForegroundBright: #cccccc;
+  --colorForegroundBright: #d4d4d4;
   --colorForegroundLink: var(--accentColor, #007acc);
 
-  --colorBackgroundPrimary: #1e1e1e;
+  --colorBackgroundPrimary: #181818;
   --colorForegroundPrimary: var(--colorForegroundBright);
 
-  --colorBackgroundSecondary: #252526;
+  --colorBackgroundSecondary: #1f1f1f;
   --colorForegroundSecondary: #858585;
 
-  --colorBackgroundTertiary: #333333;
+  --colorBackgroundTertiary: #252526;
   --colorForegroundTertiary: #858585;
 
   --colorBackgroundSuccess: #5a8f5a;
@@ -25,7 +25,7 @@ html[data-theme="dark"] {
   --colorForegroundAccent: #ffffff;
   
   --colorForegroundSunday: #c26b6b;
-  --colorBackgroundSelection: #094771;
-  --colorBorderSubtle: #2b2b2b;
+  --colorBackgroundSelection: #073655;
+  --colorBorderSubtle: #3a3a3a;
   --colorBackgroundHover: #2a2d2e;
 }

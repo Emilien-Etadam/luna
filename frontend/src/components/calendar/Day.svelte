@@ -57,19 +57,25 @@
     height: 100%;
     position: relative;
     font-size: text.$fontSizeSmall; // due to em units in the below variable being relative, we set the font size here already
-    --gapBetweenDays: calc(#{dimensions.$gapSmall} / 2);
+    --gapBetweenDays: 0px;
+    border-right: 1px solid var(--colorBorderSubtle, #3a3a3a);
+    border-bottom: 1px solid var(--colorBorderSubtle, #3a3a3a);
   }
 
   div.background {
     display: flex;
     flex-direction: column;
     gap: dimensions.$gapSmall;
-    margin: var(--gapBetweenDays);
+    margin: 0;
     padding: dimensions.$gapSmall;
     border-radius: dimensions.$borderRadiusSmall;
     background-color: colors.$backgroundSecondary;
-    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
-    height: calc(100% - dimensions.$gapSmall);
+    border: 0;
+    height: 100%;
+  }
+
+  div.background.todayCell {
+    background-color: color-mix(in srgb, colors.$backgroundSecondary 76%, colors.$backgroundAccent);
   }
 
   span.top {
@@ -168,7 +174,7 @@
 </style>
 
 <div class="day">
-  <div class="background" class:otherMonth={!isCurrentMonth}>
+  <div class="background" class:otherMonth={!isCurrentMonth} class:todayCell={isToday}>
     <span class="top">
       <span class="date" class:sunday={date.getDay() === 0} class:today={isToday}>
         {date.getDate()}
