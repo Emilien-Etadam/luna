@@ -15,12 +15,14 @@
     date: Date;
     view: "month" | "week" | "day";
     events: EventModel[];
+    readOnly?: boolean;
   }
 
   let {
     date,
     view,
     events,
+    readOnly = false,
   }: Props = $props();
 
   const settings = getSettings();
@@ -315,6 +317,7 @@
         bind:containerHeight={containerHeight}
         view={view}
         showMore={showMore}
+        {readOnly}
       >
       </Day>
     {/each}

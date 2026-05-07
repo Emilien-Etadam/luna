@@ -56,6 +56,23 @@ export class Settings {
   constructor(prefetchedData: { userData: UserData, userSettings: UserSettings, globalSettings: GlobalSettings } | null = null) {
     this.fetchFromStorage();
     if (browser) window.addEventListener("storage", () => this.fetchFromStorage());
+    // Avoid treating stale localStorage user as logged-in when there is no session cookie.
+    if (browser && !document.cookie.includes("tokenPresent")) {
+      this.userData = {
+        id: "",
+        username: "",
+        email: "",
+        admin: false,
+        searchable: true,
+        profile_picture_type: "static",
+        profile_picture_url: "",
+        profile_picture_file: "",
+        profile_picture: "",
+        verified: false,
+        enabled: false,
+        created_at: new Date(0),
+      };
+    }
     if (prefetchedData) this.loadFromObject(prefetchedData.userData, prefetchedData.userSettings, prefetchedData.globalSettings);
     else this.fetchSettings();
   }

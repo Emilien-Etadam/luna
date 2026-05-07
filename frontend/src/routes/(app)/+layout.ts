@@ -73,10 +73,11 @@ export const load: PageLoad = async (event: LoadEvent) => {
     fetchJsonFromEvent(event, "/api/users/self/settings", {}, true),
     fetchJsonFromEvent(event, "/api/settings", {}, true)
   ]).catch((err) => {
-    if (err.message.includes("Unauthorized") || err.message.includes("Session expired")) {
+    if (err.message.includes("Session expired")) {
       redirect(302, `/login?redirect=${encodeURIComponent(event.url.pathname)}&expired=true`);
     }
-    return null; 
+    // Not logged in (or other failure): anonymous read-only mode on / — do not redirect to login.
+    return null;
   });
 
   if (!results || results[0].user === undefined) return {

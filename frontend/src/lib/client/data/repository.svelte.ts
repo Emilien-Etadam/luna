@@ -8,6 +8,7 @@ import { queueNotification } from "../notifications";
 
 import { parallel } from "$lib/common/misc";
 import type { Metadata } from "./metadata.svelte";
+import { getSettings } from "./settings.svelte";
 
 
 export class Repository {
@@ -42,6 +43,11 @@ export class Repository {
       window.addEventListener("storage", () => this.loadCache());
       this.loadCache();
     }
+  }
+
+  /** True when no logged-in user (anonymous public read-only mode). */
+  private isPublicReadOnly(): boolean {
+    return !getSettings().userData.id;
   }
 
   //
@@ -318,11 +324,24 @@ export class Repository {
 
     const stopLoading = this.metadata.startLoading();
 
-    const fetchedSources: SourceModel[] = (await fetchJson("/api/sources").catch((err) => {
+    const sourcesUrl = this.isPublicReadOnly() ? "/api/public/sources" : "/api/sources";
+    const res = (await fetchJson(sourcesUrl).catch((err) => {
       throw err;
     }).finally(() => {
       stopLoading();
-    })).sources;
+    })) as { sources: SourceModel[] | { id: string; name: string; type: string }[] };
+
+    const fetchedSources: SourceModel[] = this.isPublicReadOnly()
+      ? (res.sources as { id: string; name: string; type: string }[]).map((s) => ({
+          id: s.id,
+          name: s.name,
+          type: s.type,
+          settings: {},
+          auth_type: "none",
+          auth: {},
+          can_add_calendars: false,
+        }))
+      : (res.sources as SourceModel[]);
 
     this.sourcesCache.date = Date.now(),
     this.sourcesCache.value = fetchedSources;
@@ -333,6 +352,11 @@ export class Repository {
 
   async getSourceDetails(id: string, forceRefresh = false): Promise<SourceModel> {
     if (!browser) return {} as SourceModel;
+    if (this.isPublicReadOnly()) {
+      const list = await this.getSources(forceRefresh).catch(() => [] as SourceModel[]);
+      const found = list.find((s) => s.id === id);
+      return found ?? ({} as SourceModel);
+    }
 
     if (!forceRefresh) {
       const cached = this.cacheOk(this.sourceDetailsCache.get(id));
@@ -351,6 +375,7 @@ export class Repository {
 
   async createSource(newSource: SourceModel): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     const formData = this.getSourceFormData(newSource);
 
@@ -384,6 +409,7 @@ export class Repository {
 
   async editSource(modifiedSource: SourceModel, changes: SourceModelChanges): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     let formData = this.getSourceFormData(modifiedSource, changes);
 
@@ -425,6 +451,7 @@ export class Repository {
 
   async changeSourceDisplayOrder(movedSource: SourceModel, newIndex: number): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     const sources = this.sourcesCache.value || [];
     const previousIndex = sources.findIndex(x => x.id == movedSource.id);
@@ -451,6 +478,7 @@ export class Repository {
 
   async deleteSource(id: string): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     await fetchResponse(`/api/sources/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
 
@@ -501,7 +529,10 @@ export class Repository {
 
     const stopLoading = this.metadata.startLoadingSource(id);
 
-    const response = await fetchJson(`/api/sources/${id}/calendars`).catch((err) => {
+    const calendarsUrl = this.isPublicReadOnly()
+      ? `/api/public/sources/${id}/calendars`
+      : `/api/sources/${id}/calendars`;
+    const response = await fetchJson(calendarsUrl).catch((err) => {
       this.metadata.addFaultySource(id, err.message);
       throw err;
     }).finally(() => {
@@ -538,6 +569,11 @@ export class Repository {
   }
 
   async getCalendar(id: string, forceRefresh = false): Promise<CalendarModel> {
+    if (this.isPublicReadOnly()) {
+      const c = this.calendarsMap.get(id);
+      if (c) return c;
+      return {} as CalendarModel;
+    }
     // TODO: needs refactoring like integrating cache age check
     const fetched: CalendarModel = (await fetchJson(`/api/calendars/${id}`).catch((err) => { throw err; })).calendar;
     this.calendarsMap.set(fetched.id, fetched);
@@ -547,6 +583,7 @@ export class Repository {
 
   async createCalendar(newCalendar: CalendarModel): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     // add to database
     const formData = this.getCalendarFormData(newCalendar);
@@ -570,6 +607,7 @@ export class Repository {
 
   async editCalendar(modifiedCalendar: CalendarModel, changes: CalendarModelChanges, override: boolean): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     // update in database
     if (override && changes !== NoChangesCalendar) changes.color = true; // we have no way to destinguish between "don't change color" and "default color"
@@ -591,6 +629,7 @@ export class Repository {
 
   async changeCalendarDisplayOrder(movedCalendar: CalendarModel, newIndex: number): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     const calendars = this.calendarsCache.get(movedCalendar.source)?.value || [];
     const previousIndex = calendars.findIndex(x => x == movedCalendar.id);
@@ -616,6 +655,7 @@ export class Repository {
 
   async deleteCalendar(id: string): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     // remove from database
     await fetchResponse(`/api/calendars/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
@@ -723,6 +763,11 @@ export class Repository {
   }
 
   async getEvent(id: string, forceRefresh = false): Promise<EventModel> {
+    if (this.isPublicReadOnly()) {
+      const e = this.eventsMap.get(id);
+      if (e) return e;
+      return {} as EventModel;
+    }
     // TODO: needs refactoring like integrating cache age check
     const fetched: EventModel = (await fetchJson(`/api/events/${id}`).catch((err) => { throw err; })).event;
     fetched.date.start = new Date(fetched.date.start);
@@ -837,8 +882,11 @@ export class Repository {
     localEnd.setDate(0);
     localEnd.setHours(23, 59, 59, 999);
 
+    const eventsPath = this.isPublicReadOnly()
+      ? `/api/public/calendars/${calendar}/events`
+      : `/api/calendars/${calendar}/events`;
     return (
-      await fetchJson(`/api/calendars/${calendar}/events?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`)
+      await fetchJson(`${eventsPath}?start=${encodeURIComponent(localStart.toISOString())}&end=${encodeURIComponent(localEnd.toISOString())}`)
         .catch((err) => { throw err; })
     ).events;
   }
@@ -857,6 +905,7 @@ export class Repository {
 
   async createEvent(newEvent: EventModel): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     // add to database
     if (newEvent.date.allDay) {
@@ -891,6 +940,7 @@ export class Repository {
 
   async editEvent(modifiedEvent: EventModel, changes: EventModelChanges, override: boolean): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     // update in database
     if (modifiedEvent.date.allDay) {
@@ -934,6 +984,7 @@ export class Repository {
 
   async deleteEvent(id: string): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     // remove from database
     await fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
@@ -954,6 +1005,7 @@ export class Repository {
 
   async moveEvent(event: EventModel): Promise<void> {
     if (!browser) return;
+    if (this.isPublicReadOnly()) return;
 
     const oldId = event.id;
 

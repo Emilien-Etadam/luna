@@ -15,10 +15,12 @@
 
   interface Props {
     source: SourceModel;
+    readOnly?: boolean;
   }
 
   let {
-    source = $bindable()
+    source = $bindable(),
+    readOnly = false,
   }: Props = $props();
 
   const metadata = getMetadata();
@@ -43,6 +45,7 @@
   });
 
   async function reorderSource(newIndex: number) {
+    if (readOnly) return;
     await repository.changeSourceDisplayOrder(source, newIndex).catch((err) => {
       queueNotification(ColorKeys.Danger, err);
     });
@@ -80,6 +83,12 @@
     position: relative;
   }
 
+  span.sourceName {
+    cursor: default;
+    display: inline;
+    width: max-content;
+  }
+
   //span :global(button) {
   //  opacity: 0;
   //  transition: all $animationSpeed $cubic;
@@ -90,26 +99,36 @@
   //}
 </style>
 
-<div class="sourceEntry" use:draggable={{ ownClass: "sourceEntry", childClasses: ["calendarEntry"], callback: reorderSource}}>
-  <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
-    {source.name}
-  </button>
-  <span>
-    {#if isLoading}
-      <Spinner/>
-    {/if}
-    {#if hasCals}
-      <CollapseToggle bind:collapsed={sourceCollapsed}/>
-    {/if}
-    {#if hasErrored}
-      <Tooltip error={true}>An error occurred trying to retrieve calendars from this source.</Tooltip>
-    {/if}
-  </span>
-  <!--
-  <IconButton callback={showModal}>
-    <PencilIcon size={16}/>
-    <BoltIcon size={16}/>
-    <CogIcon size={16}/>
-  </IconButton>
-  -->
-</div>
+{#if readOnly}
+  <div class="sourceEntry">
+    <span class="sourceName">{source.name}</span>
+    <span>
+      {#if isLoading}
+        <Spinner/>
+      {/if}
+      {#if hasCals}
+        <CollapseToggle bind:collapsed={sourceCollapsed}/>
+      {/if}
+      {#if hasErrored}
+        <Tooltip error={true}>An error occurred trying to retrieve calendars from this source.</Tooltip>
+      {/if}
+    </span>
+  </div>
+{:else}
+  <div class="sourceEntry" use:draggable={{ ownClass: "sourceEntry", childClasses: ["calendarEntry"], callback: reorderSource}}>
+    <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
+      {source.name}
+    </button>
+    <span>
+      {#if isLoading}
+        <Spinner/>
+      {/if}
+      {#if hasCals}
+        <CollapseToggle bind:collapsed={sourceCollapsed}/>
+      {/if}
+      {#if hasErrored}
+        <Tooltip error={true}>An error occurred trying to retrieve calendars from this source.</Tooltip>
+      {/if}
+    </span>
+  </div>
+{/if}

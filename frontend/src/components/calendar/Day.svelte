@@ -19,6 +19,7 @@
     containerHeight: number;
     view: "month" | "week" | "day";
     showMore?: (date: Date, events: (EventModel | null)[]) => any;
+    readOnly?: boolean;
   }
 
   let {
@@ -31,6 +32,7 @@
     containerHeight = $bindable(),
     view,
     showMore = NoOp,
+    readOnly = false,
   }: Props = $props();
 
   let showCreateEventModal: ((date: Date) => Promise<EventModel>) = getContext("showNewEventModal");
@@ -169,11 +171,13 @@
       <span class="date" class:sunday={date.getDay() === 0} class:today={isToday}>
         {date.getDate()}
       </span>
-      <span class="add">
-        <IconButton click={createEventButtonClick} tabindex={-1}>
-          <PlusIcon size={13}/>
-        </IconButton>
-      </span>
+      {#if !readOnly}
+        <span class="add">
+          <IconButton click={createEventButtonClick} tabindex={-1}>
+            <PlusIcon size={13}/>
+          </IconButton>
+        </span>
+      {/if}
     </span>
   </div>
   {#if isFirstDay}
@@ -209,6 +213,7 @@
         date={date}
         visible={i < actualMaxEvents}
         view={view}
+        {readOnly}
       />
     <!--</div>-->
   {/each}

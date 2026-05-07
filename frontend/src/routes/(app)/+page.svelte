@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Github } from "svelte-simples"
   import { Copyleft, PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
-  import { setContext, untrack } from "svelte";
+  import { onMount, setContext, untrack } from "svelte";
 
   import Calendar from "../../components/calendar/Calendar.svelte";
   import CalendarEntry from "../../components/calendar/CalendarEntry.svelte";
@@ -42,6 +42,7 @@
   const metadata = getMetadata();
   const repository = getRepository();
   const connectivity = getConnectivity();
+  const publicReadonly = $derived(!settings.userData.id);
 
   /* Constants */
   let autoRefreshInterval = 1000 * 60; // 1 minute
@@ -131,8 +132,6 @@
     spooledRefresh = undefined; 
   });
 
-  getRepository().getSources().catch(NoOp);
-
   let spooledRefresh: (ReturnType<typeof setTimeout> | undefined) = $state(undefined);
   function refresh(force = false) {
     const range = getVisibleRange(date, view);
@@ -143,10 +142,12 @@
 
     connectivity.check();
 
-    clearTimeout(spooledRefresh);
-    spooledRefresh = setTimeout(() => {
-      refresh();
-    }, autoRefreshInterval);
+    if (!publicReadonly) {
+      clearTimeout(spooledRefresh);
+      spooledRefresh = setTimeout(() => {
+        refresh();
+      }, autoRefreshInterval);
+    }
   }
 
   function forceRefresh() {
@@ -161,6 +162,11 @@
         refresh();
       });
     })(date, view);
+  });
+
+  onMount(() => {
+    if (!browser) return;
+    getRepository().getSources().catch(NoOp);
   });
 
   /* Single instance modal logic */
@@ -279,20 +285,23 @@
     text-align: center;
     margin-top: -(dimensions.$gapSmall);
   }
+
 </style>
 
-<SourceWizardModal bind:showModal={showSourceWizardModal}/>
-<SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
-<CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
-<EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
-<DayViewModal bind:showModal={showDateModal}/>
-<SettingsModal bind:showModal={showSettingsModal}/>
+{#if !publicReadonly}
+  <SourceWizardModal bind:showModal={showSourceWizardModal}/>
+  <SourceModal bind:showCreateModal={showNewSourceModal} bind:showModal={showSourceModal}/>
+  <CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
+  <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
+  <DayViewModal bind:showModal={showDateModal}/>
+  <SettingsModal bind:showModal={showSettingsModal}/>
+{/if}
 <CreditsModal bind:showModal={showCreditsModal}/>
 
 <aside>
   <Title>Luna</Title>
 
-  {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+  {#if !publicReadonly && settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
     <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
   {/if}
 
@@ -301,12 +310,14 @@
   </div>
 
   <Horizontal position="center">
-    <IconButton click={showSettingsModal}>
-      <Settings/>
-    </IconButton>
-    <IconButton click={showSourceWizardModal}>
-      <PlusIcon/>
-    </IconButton>
+    {#if !publicReadonly}
+      <IconButton click={showSettingsModal}>
+        <Settings/>
+      </IconButton>
+      <IconButton click={showSourceWizardModal}>
+        <PlusIcon/>
+      </IconButton>
+    {/if}
     <IconButton click={showCreditsModal}>
       <Copyleft/>
     </IconButton>
@@ -367,16 +378,17 @@
       />
     </Horizontal>
   </div>
-    <Calendar
-      date={date}
-      view={view}
-      events={repository.events}
-    />
+  <Calendar
+    date={date}
+    view={view}
+    events={repository.events}
+    readOnly={publicReadonly}
+  />
 </main>
 
 {#snippet sourceEntries(sources: SourceModel[])}
   {#each sources as source, i (source.id)}
-    <SourceEntry bind:source={repository.sources[i]}/>
+    <SourceEntry bind:source={repository.sources[i]} readOnly={publicReadonly}/>
     {#if !metadata.collapsedSources.has(repository.sources[i].id)}
       {@render calendarEntries(repository.calendars.filter(cal => cal.source === source.id) || [])}
     {/if}
@@ -386,6 +398,6 @@
 {#snippet calendarEntries(calendars: CalendarModel[])}
   {#each calendars as cal (cal.id)}
     {@const index = repository.calendars.findIndex((calendar) => calendar.id === cal.id)}
-    <CalendarEntry bind:calendar={repository.calendars[index]}/>
+    <CalendarEntry bind:calendar={repository.calendars[index]} readOnly={publicReadonly}/>
   {/each}
 {/snippet}

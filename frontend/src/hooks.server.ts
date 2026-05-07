@@ -56,6 +56,19 @@ export const handle: Handle = async ({ event, resolve }) => {
       }
     }
     
+    // Allow anonymous read-only Luna on / when public aggregated calendar is enabled (HEAD backend feed).
+    if (!isUnprivileged && pathname === "/" && process.env.API_URL) {
+      try {
+        const headRes = await fetch(`${process.env.API_URL}/api/public/all.ics`, { method: "HEAD" });
+        if (headRes.ok) {
+          isUnprivileged = true;
+        }
+      } catch {
+        // Backend unreachable: still allow app shell so client can show connectivity errors.
+        isUnprivileged = true;
+      }
+    }
+
     if (!isUnprivileged) {
       return new Response(null, {
         status: 302,

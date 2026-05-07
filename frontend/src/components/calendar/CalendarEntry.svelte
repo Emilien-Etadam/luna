@@ -17,9 +17,10 @@
 
   interface Props {
     calendar: CalendarModel;
+    readOnly?: boolean;
   }
 
-  let { calendar = $bindable() }: Props = $props();
+  let { calendar = $bindable(), readOnly = false }: Props = $props();
 
   const metadata = getMetadata();
   const repository = getRepository();
@@ -43,6 +44,7 @@
   }
 
   async function reorderCalendar(newIndex: number) {
+    if (readOnly) return;
     await repository.changeCalendarDisplayOrder(calendar, newIndex).catch((err) => {
       queueNotification(ColorKeys.Danger, err);
     });
@@ -89,25 +91,53 @@
     min-width: 0;
     overflow: hidden;
   }
+
+  span.calendarName {
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    min-width: 0;
+    overflow: hidden;
+  }
 </style>
 
-<div class="calendarEntry" use:draggable={{ ownClass: "calendarEntry", childClasses: [], callback: reorderCalendar}}>
-  <span class="name">
-    <ColorCircle
-      color={GetCalendarColor(calendar)}
-      size="small"
-    />
-    <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
-      {calendar.name}
-    </button>
-  </span>
-  <span class="buttons">
-    {#if isLoading}
-      <Spinner/>
-    {/if}
-    <VisibilityToggle bind:visible={calendarVisible} onClick={setVisible}/>
-    {#if hasErrored}
-      <Tooltip error={true}>An error occurred trying to retrieve events from this calendar.</Tooltip>
-    {/if}
-  </span>
-</div>
+{#if readOnly}
+  <div class="calendarEntry">
+    <span class="name">
+      <ColorCircle
+        color={GetCalendarColor(calendar)}
+        size="small"
+      />
+      <span class="calendarName">{calendar.name}</span>
+    </span>
+    <span class="buttons">
+      {#if isLoading}
+        <Spinner/>
+      {/if}
+      <VisibilityToggle bind:visible={calendarVisible} onClick={setVisible}/>
+      {#if hasErrored}
+        <Tooltip error={true}>An error occurred trying to retrieve events from this calendar.</Tooltip>
+      {/if}
+    </span>
+  </div>
+{:else}
+  <div class="calendarEntry" use:draggable={{ ownClass: "calendarEntry", childClasses: [], callback: reorderCalendar}}>
+    <span class="name">
+      <ColorCircle
+        color={GetCalendarColor(calendar)}
+        size="small"
+      />
+      <button onclick={showModalInternal} use:focusIndicator={{ type: "underline" }}>
+        {calendar.name}
+      </button>
+    </span>
+    <span class="buttons">
+      {#if isLoading}
+        <Spinner/>
+      {/if}
+      <VisibilityToggle bind:visible={calendarVisible} onClick={setVisible}/>
+      {#if hasErrored}
+        <Tooltip error={true}>An error occurred trying to retrieve events from this calendar.</Tooltip>
+      {/if}
+    </span>
+  </div>
+{/if}

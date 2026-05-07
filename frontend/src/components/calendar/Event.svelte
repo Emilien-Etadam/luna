@@ -18,6 +18,7 @@
     isFirstDay: boolean;
     date: Date;
     view: "month" | "week" | "day";
+    readOnly?: boolean;
   }
 
   let {
@@ -25,7 +26,8 @@
     event,
     isFirstDay,
     date,
-    view
+    view,
+    readOnly = false,
   }: Props = $props();
 
   const settings = getSettings();
@@ -87,13 +89,13 @@
 
     if (currentlyClickedEvent == event) {
       currentlyClickedEvent = null;
-      showModal(event).then(newEvent => event = newEvent).catch(NoOp);
+      if (!readOnly) showModal(event).then(newEvent => event = newEvent).catch(NoOp);
       element?.blur();
     }
   }
   function keyPress(e: KeyboardEvent) {
     passIfEnter(e, () => {
-      if (event) showModal(event).then(newEvent => event = newEvent).catch(NoOp);
+      if (event && !readOnly) showModal(event).then(newEvent => event = newEvent).catch(NoOp);
       element?.blur();
     });
   }

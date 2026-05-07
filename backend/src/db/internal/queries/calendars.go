@@ -209,6 +209,52 @@ func (q *Queries) OverrideCalendars(cals []types.Calendar) ([]types.Calendar, *e
 	return cals, nil
 }
 
+// MergeCalendarsOverridesReadOnly applies title/description/color overrides without writing cache rows (read-only tx).
+func (q *Queries) MergeCalendarsOverridesReadOnly(cals []types.Calendar) ([]types.Calendar, *errors.ErrorTrace) {
+	if len(cals) == 0 {
+		return cals, nil
+	}
+
+	calMap := map[types.ID]types.Calendar{}
+	for _, cal := range cals {
+		calMap[cal.GetId()] = cal
+	}
+
+	dbCals, trEntries := q.getCalendarEntries(cals)
+	if trEntries != nil {
+		return nil, trEntries.
+			Append(errors.LvlWordy, "Could not get calendar overrides").
+			Append(errors.LvlPlain, "Database error")
+	}
+
+	for _, dbCal := range dbCals {
+		if cal, ok := calMap[dbCal.Id]; ok {
+			if !dbCal.Overridden {
+				continue
+			}
+			cal.SetOverridden(true)
+			if dbCal.Title != "" {
+				cal.SetName(dbCal.Title)
+			}
+			if dbCal.Description != "" {
+				cal.SetDesc(dbCal.Description)
+			}
+			if dbCal.Color != nil {
+				cal.SetColor(types.ColorFromBytes(dbCal.Color))
+			}
+		}
+	}
+
+	cals, trOrder := q.orderCalendars(cals)
+	if trOrder != nil {
+		return nil, trOrder.
+			Append(errors.LvlWordy, "Could not order calendars").
+			Append(errors.LvlPlain, "Database error")
+	}
+
+	return cals, nil
+}
+
 func (q *Queries) OverrideCalendar(calendar types.Calendar) (types.Calendar, *errors.ErrorTrace) {
 	cals, tr := q.OverrideCalendars([]types.Calendar{calendar})
 	if tr != nil {
