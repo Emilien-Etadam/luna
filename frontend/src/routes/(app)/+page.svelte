@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Github } from "svelte-simples"
-  import { Copyleft, PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
+  import { CalendarDays, CalendarRange, Calendar as CalendarSingle, Copyleft, List, PlusIcon, RefreshCw, Settings, WifiOff } from "lucide-svelte";
   import { onMount, setContext, untrack } from "svelte";
 
   import Calendar from "../../components/calendar/Calendar.svelte";
@@ -10,7 +10,6 @@
   import Horizontal from "../../components/layout/Horizontal.svelte";
   import IconButton from "../../components/interactive/IconButton.svelte";
   import MonthSelection from "../../components/interactive/MonthSelection.svelte";
-  import SelectButtons from "../../components/forms/SelectButtons.svelte";
   import SourceEntry from "../../components/calendar/SourceEntry.svelte";
   import SourceModal from "../../components/modals/SourceModal.svelte";
   import Title from "../../components/layout/Title.svelte";
@@ -28,6 +27,7 @@
   import DayViewModal from "../../components/modals/DayViewModal.svelte";
   import { getDayIndex, isInRange } from "../../lib/common/date";
   import { compareEventsByStartDate } from "../../lib/common/comparators";
+  import { GetEventColor } from "$lib/common/colors";
   import SourceWizardModal from "../../components/modals/SourceWizardModal.svelte";
   import SettingsModal from "../../components/modals/SettingsModal.svelte";
   import { getSettings } from "$lib/client/data/settings.svelte";
@@ -48,10 +48,10 @@
   let autoRefreshInterval = 1000 * 60; // 1 minute
 
   /* View logic */
-  let view: "month" | "week" | "day" = $derived.by(() => {
+  let view: "month" | "week" | "day" | "agenda" = $derived.by(() => {
     const stored = page.url.searchParams.get("view");
-    if (!stored || !["month", "week", "day"].includes(stored)) return "month"
-    return stored as "month" | "week" | "day";
+    if (!stored || !["month", "week", "day", "agenda"].includes(stored)) return "month"
+    return stored as "month" | "week" | "day" | "agenda";
   });
 
   let today = $state(new Date());
@@ -71,7 +71,7 @@
     history.replaceState(history.state, '', url);
   })
 
-  function getVisibleRange(date: Date, view: "month" | "week" | "day"): { start: Date, end: Date } {
+  function getVisibleRange(date: Date, view: "month" | "week" | "day" | "agenda"): { start: Date, end: Date } {
     const rangeStart = new Date(date);
     const rangeEnd = new Date(date);
     rangeStart.setHours(0, 0, 0, 0);
@@ -89,6 +89,11 @@
         rangeEnd.setDate(rangeStart.getDate() + 7);
         break;
       case "day":
+      case "agenda":
+        rangeStart.setDate(1);
+        rangeEnd.setMonth(rangeEnd.getMonth() + 1);
+        rangeEnd.setDate(0);
+        break;
       default:
     }
     return { start: rangeStart, end: rangeEnd };
@@ -156,7 +161,7 @@
   }
 
   $effect(() => {
-    ((date: Date, view: "month" | "week" | "day") => {
+    ((date: Date, view: "month" | "week" | "day" | "agenda") => {
       untrack(() => {
         if (!browser) return;
         refresh();
@@ -201,6 +206,70 @@
   let showSettingsModal: () => any = $state(NoOp);
 
   let showCreditsModal: () => any = $state(NoOp);
+
+  const timezone = $derived(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
+  const connectivityLabel = $derived.by(() => {
+    switch (connectivity.reachable) {
+      case Reachability.Database:
+        return "Sync OK";
+      case Reachability.Backend:
+        return "DB indisponible";
+      case Reachability.Frontend:
+        return "Backend indisponible";
+      case Reachability.None:
+        return "Frontend indisponible";
+      case Reachability.Incompatible:
+        return "Versions incompatibles";
+      default:
+        return "Etat inconnu";
+    }
+  });
+  const nextEventLabel = $derived.by(() => {
+    const now = Date.now();
+    const next = repository.events
+      .filter((event) => event.date.end.getTime() > now)
+      .sort(compareEventsByStartDate)[0];
+
+    if (!next) return "Prochain: aucun";
+    const time = next.date.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return `Prochain: ${time} ${next.name}`;
+  });
+
+  const agendaDays = $derived.by(() => {
+    const range = getVisibleRange(date, view);
+    const start = new Date(range.start);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(range.end);
+    end.setHours(23, 59, 59, 999);
+
+    const inRangeEvents = repository.events
+      .filter((event) => event.date.end.getTime() > start.getTime() && event.date.start.getTime() <= end.getTime())
+      .sort(compareEventsByStartDate);
+
+    const byDay = new Map<string, { date: Date, events: EventModel[] }>();
+    for (const event of inRangeEvents) {
+      const day = new Date(event.date.start);
+      day.setHours(0, 0, 0, 0);
+      const key = day.toISOString().split("T")[0];
+      if (!byDay.has(key)) byDay.set(key, { date: day, events: [] });
+      byDay.get(key)?.events.push(event);
+    }
+
+    return Array.from(byDay.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
+  });
+
+  const calendarGranularity = $derived(view === "agenda" ? "month" : view);
+
+  function openAgendaEvent(event: EventModel) {
+    showEventModal(event).then((updatedEvent: EventModel) => event = updatedEvent).catch(NoOp);
+  }
+
+  function agendaItemKeydown(e: KeyboardEvent, event: EventModel) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openAgendaEvent(event);
+    }
+  }
 </script>
 
 <style lang="scss">
@@ -227,28 +296,76 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gapLarge;
+    gap: dimensions.$gapSmall;
     grid-area: main;
+    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    background-color: colors.$backgroundPrimary;
+    overflow: hidden;
   }
   
-  aside {
+  div.leftPane {
+    display: flex;
+    flex-direction: row;
+    gap: dimensions.$gapSmall;
+  }
+
+  nav.activityBar {
+    width: 48px;
+    min-width: 48px;
+    max-width: 48px;
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gapLarge;
-    min-width: 10em;
-    width: 20vw;
-    max-width: 20em;
+    align-items: center;
+    gap: dimensions.$gapSmall;
+    background-color: colors.$backgroundTertiary;
+    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    padding: dimensions.$gapSmall dimensions.$gapSmaller;
+  }
+
+  button.activityIcon {
+    all: unset;
+    width: 100%;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: colors.$foregroundSecondary;
+    border-left: 2px solid transparent;
+  }
+
+  button.activityIcon:hover {
+    background-color: var(--colorBackgroundHover, #2a2d2e);
+    color: colors.$foregroundPrimary;
+  }
+
+  button.activityIcon.active {
+    color: colors.$foregroundPrimary;
+    border-left-color: colors.$backgroundAccent;
+    background-color: var(--colorBackgroundSelection, #094771);
+  }
+
+  aside.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: dimensions.$gapSmall;
+    min-width: 15em;
+    width: 15em;
+    max-width: 15em;
     grid-area: aside;
+    background-color: colors.$backgroundSecondary;
+    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    padding: dimensions.$gapSmall;
   }
 
   div.sources {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    gap: dimensions.$gapLarge;
+    gap: dimensions.$gapSmall;
     overflow: auto;
-    margin: -(dimensions.$gapSmall);
-    padding: dimensions.$gapSmall;
+    margin: 0;
+    padding: dimensions.$gapTiny;
   }
 
   div.toprow {
@@ -256,8 +373,11 @@
     flex-direction: row;
     gap: dimensions.$gapSmall;
     justify-content: space-between;
-    margin: 0 dimensions.$gapSmaller;
+    margin: 0;
     align-items: center;
+    padding: dimensions.$gapSmall;
+    border-bottom: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    background-color: colors.$backgroundTertiary;
   }
 
   span.reachability {
@@ -283,7 +403,90 @@
     color: color-mix(in srgb, colors.$foregroundPrimary 50%, transparent);
     font-size: text.$fontSizeSmall;
     text-align: center;
-    margin-top: -(dimensions.$gapSmall);
+    margin-top: 0;
+  }
+
+  div.statusbar {
+    min-height: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: dimensions.$gapMiddle;
+    padding: 0 dimensions.$gapSmall;
+    background-color: colors.$backgroundAccent;
+    color: colors.$foregroundAccent;
+    font-size: text.$fontSizeSmall;
+    border-top: 1px solid color-mix(in srgb, colors.$foregroundAccent 30%, transparent);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  div.statusbar span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  section.agenda {
+    height: 100%;
+    overflow-y: auto;
+    padding: dimensions.$gapSmall;
+    display: flex;
+    flex-direction: column;
+    gap: dimensions.$gapSmall;
+  }
+
+  div.agendaDay {
+    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
+    background-color: colors.$backgroundSecondary;
+  }
+
+  h3.agendaDate {
+    margin: 0;
+    padding: dimensions.$gapSmall;
+    font-size: text.$fontSize;
+    font-weight: text.$fontWeightTitle;
+    background-color: colors.$backgroundTertiary;
+    border-bottom: 1px solid var(--colorBorderSubtle, #2b2b2b);
+  }
+
+  div.agendaItem {
+    display: grid;
+    grid-template-columns: 4.5em 1fr;
+    gap: dimensions.$gapSmall;
+    align-items: center;
+    padding: dimensions.$gapSmaller dimensions.$gapSmall;
+    border-left: 2px solid colors.$backgroundAccent;
+    cursor: pointer;
+  }
+
+  div.agendaItem:hover {
+    background-color: var(--colorBackgroundHover, #2a2d2e);
+  }
+
+  div.agendaItem:focus-visible {
+    outline: 1px solid colors.$backgroundAccent;
+    outline-offset: -1px;
+  }
+
+  span.agendaTime {
+    color: colors.$foregroundSecondary;
+    font-family: text.$fontFamilyTime;
+    font-size: text.$fontSizeSmall;
+  }
+
+  span.agendaName {
+    display: inline-flex;
+    align-items: center;
+    gap: dimensions.$gapSmall;
+  }
+
+  span.eventDot {
+    display: inline-block;
+    width: 0.55em;
+    height: 0.55em;
+    border-radius: 50%;
+    flex-shrink: 0;
   }
 
 </style>
@@ -298,40 +501,57 @@
 <SettingsModal bind:showModal={showSettingsModal} appearanceOnly={publicReadonly}/>
 <CreditsModal bind:showModal={showCreditsModal}/>
 
-<aside>
-  <Title>Luna</Title>
+<div class="leftPane">
+  <nav class="activityBar" aria-label="Vues calendrier">
+    <button class="activityIcon" class:active={view === "month"} onclick={() => view = "month"} title="Mois">
+      <CalendarDays size={16}/>
+    </button>
+    <button class="activityIcon" class:active={view === "week"} onclick={() => view = "week"} title="Semaine">
+      <CalendarRange size={16}/>
+    </button>
+    <button class="activityIcon" class:active={view === "day"} onclick={() => view = "day"} title="Jour">
+      <CalendarSingle size={16}/>
+    </button>
+    <button class="activityIcon" class:active={view === "agenda"} onclick={() => view = "agenda"} title="Agenda">
+      <List size={16}/>
+    </button>
+  </nav>
 
-  {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
-    <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
-  {/if}
+  <aside class="sidebar">
+    <Title>Luna</Title>
 
-  <div class="sources">
-    {@render sourceEntries(repository.sources)}
-  </div>
-
-  <Horizontal position="center">
-    <IconButton click={showSettingsModal}>
-      <Settings/>
-    </IconButton>
-    {#if !publicReadonly}
-      <IconButton click={showSourceWizardModal}>
-        <PlusIcon/>
-      </IconButton>
-      <IconButton click={showCreditsModal}>
-        <Copyleft/>
-      </IconButton>
+    {#if settings.userSettings[UserSettingKeys.DisplaySmallCalendar]}
+      <SmallCalendar date={date} smaller={true} onDayClick={(clickedDate) => smallCalendarClick(clickedDate)}></SmallCalendar>
     {/if}
-  </Horizontal>
 
-  <span class="copyright">
-    Copyright © 2026 Kacper Darowski (Opisek)<br>
-    Licensed under TBD 
-  </span>
-</aside>
+    <div class="sources">
+      {@render sourceEntries(repository.sources)}
+    </div>
+
+    <Horizontal position="center">
+      <IconButton click={showSettingsModal}>
+        <Settings/>
+      </IconButton>
+      {#if !publicReadonly}
+        <IconButton click={showSourceWizardModal}>
+          <PlusIcon/>
+        </IconButton>
+        <IconButton click={showCreditsModal}>
+          <Copyleft/>
+        </IconButton>
+      {/if}
+    </Horizontal>
+
+    <span class="copyright">
+      Copyright © 2026 Kacper Darowski (Opisek)<br>
+      Licensed under TBD 
+    </span>
+  </aside>
+</div>
 
 <main>
   <div class="toprow">
-    <MonthSelection bind:date granularity={view} />
+    <MonthSelection bind:date granularity={calendarGranularity} />
     <Horizontal position="justify" width="auto">
       {#if connectivity.reachable != Reachability.Database}
         <span class="reachability">
@@ -366,24 +586,56 @@
         <ThemeToggle/>
       {/if}
 
-      <SelectButtons
-        name="layout"
-        compact={true}
-        bind:value={view}
-        options={[
-          { value: "day", name: "Day"},
-          { value: "week", name: "Week"},
-          { value: "month", name: "Month"},
-        ]}
-      />
     </Horizontal>
   </div>
-  <Calendar
-    date={date}
-    view={view}
-    events={repository.events}
-    readOnly={publicReadonly}
-  />
+  {#if view === "agenda"}
+    <section class="agenda">
+      {#if agendaDays.length === 0}
+        <div class="agendaDay">
+          <h3 class="agendaDate">Aucun rendez-vous sur cette periode</h3>
+        </div>
+      {:else}
+        {#each agendaDays as day (day.date.getTime())}
+          <div class="agendaDay">
+            <h3 class="agendaDate">{day.date.toLocaleDateString([], { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</h3>
+            {#each day.events as event (event.id + event.date.start.getTime())}
+              <div
+                class="agendaItem"
+                role="button"
+                tabindex="0"
+                onclick={() => openAgendaEvent(event)}
+                onkeydown={(e) => agendaItemKeydown(e, event)}
+              >
+                <span class="agendaTime">
+                  {#if event.date.allDay}
+                    Journee
+                  {:else}
+                    {event.date.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {/if}
+                </span>
+                <span class="agendaName">
+                  <span class="eventDot" style="background-color: {GetEventColor(event)}"></span>
+                  {event.name}
+                </span>
+              </div>
+            {/each}
+          </div>
+        {/each}
+      {/if}
+    </section>
+  {:else}
+    <Calendar
+      date={date}
+      view={view}
+      events={repository.events}
+      readOnly={publicReadonly}
+    />
+  {/if}
+  <div class="statusbar">
+    <span>{timezone}</span>
+    <span>{connectivityLabel}</span>
+    <span>{nextEventLabel}</span>
+  </div>
 </main>
 
 {#snippet sourceEntries(sources: SourceModel[])}

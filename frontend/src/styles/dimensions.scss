@@ -5,17 +5,17 @@ $multiplier: var(--uiScaling, 1);
 $test: 1;
 
 /* Gaps */
-$gapTiny: 0.2em;
-$gapSmaller: 0.25em;
-$gapSmall: 0.5em;
-$gapMiddle: 0.75em;
-$gapLarge: 1em;
+$gapTiny: 0.16em;
+$gapSmaller: 0.22em;
+$gapSmall: 0.42em;
+$gapMiddle: 0.62em;
+$gapLarge: 0.85em;
 $gapLarger: 2em;
 
 /* Border Radius */
-$borderRadiusSmall: var(--borderRadiusSmall, .25em);
-$borderRadius: var(--borderRadius, .5em);
-$borderRadiusLarge: var(--borderRadiusLarge, 1em);
+$borderRadiusSmall: var(--borderRadiusSmall, .125em);
+$borderRadius: var(--borderRadius, .125em);
+$borderRadiusLarge: var(--borderRadiusLarge, .2em);
 
 /* Navbar */
 $navbarHeight: 3em;

@@ -56,13 +56,13 @@
 
   button, a {
     all: unset;
-    border-radius: 50%;
+    border-radius: dimensions.$borderRadiusSmall;
     display: flex;
     align-items: center;
     padding: dimensions.$gapSmaller;
     cursor: pointer;
     position: relative;
-    transition: all animations.$cubic animations.$animationSpeed;
+    transition: background-color animations.$animationSpeed ease-out, color animations.$animationSpeed ease-out;
   }
 
   button.hidden, a.hidden {
@@ -71,9 +71,9 @@
 
   div.circle {
     position: absolute;
-    background-color: colors.$backgroundSecondary;
+    background-color: var(--colorBackgroundHover, #{colors.$backgroundSecondary});
     z-index: -1;
-    border-radius: 50%;
+    border-radius: dimensions.$borderRadiusSmall;
     left: 50%;
     top: 50%;
     width: 0%;

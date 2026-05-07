@@ -171,7 +171,7 @@
 
   :global(body) {
     margin: 0;
-    padding: dimensions.$gapLarge;
+    padding: dimensions.$gapSmall;
     gap: dimensions.$gapSmall;
 
     height: 100vh;
@@ -182,6 +182,30 @@
 
     background-color: colors.$backgroundPrimary;
     color: colors.$foregroundPrimary;
+  }
+
+  :global(*:focus-visible) {
+    outline: 1px solid colors.$backgroundAccent;
+    outline-offset: 0;
+  }
+
+  :global(*) {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, colors.$foregroundSecondary 45%, transparent) transparent;
+  }
+
+  :global(*::-webkit-scrollbar) {
+    width: 10px;
+    height: 10px;
+  }
+
+  :global(*::-webkit-scrollbar-thumb) {
+    background-color: color-mix(in srgb, colors.$foregroundSecondary 35%, transparent);
+    border-radius: dimensions.$borderRadiusSmall;
+  }
+
+  :global(*::-webkit-scrollbar-thumb:hover) {
+    background-color: color-mix(in srgb, colors.$foregroundSecondary 65%, transparent);
   }
 
   div.notifications {

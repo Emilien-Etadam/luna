@@ -65,6 +65,13 @@
     align-items: center;
     align-content: center;
     user-select: none;
+    padding: dimensions.$gapTiny dimensions.$gapSmaller;
+    border-radius: dimensions.$borderRadiusSmall;
+  }
+
+  div:hover {
+    background-color: var(--colorBackgroundHover, #{colors.$backgroundSecondary});
+    color: colors.$foregroundPrimary;
   }
 
   span {

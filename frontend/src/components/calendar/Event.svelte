@@ -134,7 +134,8 @@
 
     flex-shrink: 0;
 
-    transition: background-color linear animations.$animationSpeedFast;
+    border-left: 2px solid transparent;
+    transition: background-color linear animations.$animationSpeedFast, border-color linear animations.$animationSpeedFast;
   }
 
   div:focus {
@@ -199,6 +200,12 @@
   div.onlyCircle {
     background-color: transparent !important;
     color: colors.$foregroundSecondary !important;
+  }
+
+  div.hover,
+  div.active {
+    border-left-color: colors.$backgroundAccent;
+    background-color: var(--colorBackgroundSelection, #{colors.$backgroundSecondary}) !important;
   }
 </style>
 

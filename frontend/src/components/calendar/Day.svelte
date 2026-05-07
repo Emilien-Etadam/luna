@@ -68,6 +68,7 @@
     padding: dimensions.$gapSmall;
     border-radius: dimensions.$borderRadiusSmall;
     background-color: colors.$backgroundSecondary;
+    border: 1px solid var(--colorBorderSubtle, #2b2b2b);
     height: calc(100% - dimensions.$gapSmall);
   }
 
@@ -99,7 +100,7 @@
     position: absolute;
     width: calc(1.25 * text.$fontSize);
     aspect-ratio: 1 / 1;
-    border-radius: dimensions.$borderRadius;
+    border-radius: dimensions.$borderRadiusSmall;
     left: calc(50% - 1.25 * 0.5 * #{text.$fontSize});
     top: translateY(calc(1.25 * 0.5 * text.$fontSize - #{dimensions.$gapSmall}));
     z-index: -1;
@@ -126,6 +127,7 @@
     margin: 0 var(--gapBetweenDays);
     padding: dimensions.$gapSmaller 0;
     position: relative;
+    border-top: 1px solid var(--colorBorderSubtle, #2b2b2b);
   }
 
   button.otherMonth {

@@ -1,7 +1,7 @@
 @use "./dimensions.scss";
 
 /* Font family */
-$fontFamilyText: var(--fontFamilyText, "Atkinson Hyperlegible Next");
+$fontFamilyText: var(--fontFamilyText, -apple-system, "Segoe UI", system-ui, sans-serif);
 $fontFamilyTime: var(--fontFamilyTime, "Atkinson Hyperlegible Mono");
 
 /* Font size ratios */
@@ -10,10 +10,10 @@ $fontSizeSmallRatio: 0.8;
 $fontSizeLargeRatio: 1.5;
 $fontSizeLargerRatio: 2;
 
-/* Font size */
-$fontSizeSmaller: calc(0.6rem * #{dimensions.$multiplier});
-$fontSizeSmall: calc(0.8rem * #{dimensions.$multiplier});
-$fontSize: calc(1rem * #{dimensions.$multiplier});
+/* Font size (dense, VS Code-like baseline) */
+$fontSizeSmaller: calc(0.55rem * #{dimensions.$multiplier});
+$fontSizeSmall: calc(0.72rem * #{dimensions.$multiplier});
+$fontSize: calc(0.8125rem * #{dimensions.$multiplier});
 $fontSizeLarge: calc(1.5rem * #{dimensions.$multiplier});
 $fontSizeLarger: calc(2rem * #{dimensions.$multiplier});
 

@@ -52,6 +52,7 @@
 </script>
 
 <style lang="scss">
+  @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
 
   div.calendarEntry {
@@ -63,6 +64,12 @@
     justify-content: space-between;
     user-select: none;
     cursor: grab;
+    padding: dimensions.$gapTiny dimensions.$gapSmaller;
+    border-radius: dimensions.$borderRadiusSmall;
+  }
+
+  div.calendarEntry:hover {
+    background-color: var(--colorBackgroundHover, #{colors.$backgroundSecondary});
   }
 
   span {

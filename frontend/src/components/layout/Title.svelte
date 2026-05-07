@@ -14,9 +14,10 @@
 
   h1 {
     padding: 0;
-    margin: dimensions.$gapSmall 0 dimensions.$gapSmaller 0;
+    margin: 0;
     font-weight: text.$fontWeightTitle;
-    font-size: text.$fontSizeTitle;
+    font-size: text.$fontSizeLarge;
+    letter-spacing: 0.01em;
   }
 </style>
 
