@@ -13,7 +13,7 @@ func init() {
 			q.Context,
 			`
 			INSERT INTO global_settings (key, value)
-			VALUES ('public_calendar_enabled', '{"value": false}'::jsonb)
+			VALUES ('public_calendar_enabled', 'false'::jsonb)
 			ON CONFLICT (key) DO NOTHING;
 			`,
 		)

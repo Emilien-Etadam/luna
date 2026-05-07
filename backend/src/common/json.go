@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 )
@@ -22,6 +23,13 @@ func UnmarshalBool(data []byte) (bool, error) {
 	case "false":
 		return false, nil
 	default:
+		// Backward compatibility: some DB rows historically used {"value": <bool>}.
+		var wrapped struct {
+			Value *bool `json:"value"`
+		}
+		if err := json.Unmarshal(data, &wrapped); err == nil && wrapped.Value != nil {
+			return *wrapped.Value, nil
+		}
 		return false, fmt.Errorf("could not parse boolean: %v", string(data))
 	}
 }
