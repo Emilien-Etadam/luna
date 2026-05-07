@@ -114,7 +114,7 @@ func GetPublicCalendarEvents(c *gin.Context) {
 		return
 	}
 
-	calendarId, tr := util.GetId(c, "calendarId")
+	calendarId, tr := util.GetId(c, "calendar")
 	if tr != nil {
 		u.Error(tr)
 		return

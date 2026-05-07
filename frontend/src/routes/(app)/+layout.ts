@@ -68,6 +68,14 @@ export const load: PageLoad = async (event: LoadEvent) => {
     singletons: getSingletons(version)
   }; 
 
+  // In browser nav, avoid hitting private bootstrap endpoints when no auth cookie.
+  if (typeof document !== "undefined" && !document.cookie.includes("tokenPresent")) {
+    return {
+      version: version,
+      singletons: getSingletons(version)
+    };
+  }
+
   const results = await Promise.all([
     fetchJsonFromEvent(event, "/api/users/self", {}, true),
     fetchJsonFromEvent(event, "/api/users/self/settings", {}, true),
