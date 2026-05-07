@@ -37,11 +37,13 @@
   interface Props {
     showModal?: () => any;
     hideModal?: () => any;
+    appearanceOnly?: boolean;
   }
 
   let {
     showModal = $bindable(),
     hideModal = $bindable(NoOp),
+    appearanceOnly = false,
   }: Props = $props();
 
   // Global data structures
@@ -126,9 +128,14 @@
       { name: "Logout", value: "logout", icon: LogOut, color: ColorKeys.Danger },
     ],
   ]
+  const categoriesAppearanceOnly: Option<string>[][] = [
+    [
+      { name: "Appearance", value: "appearance", icon: Palette },
+    ],
+  ]
 
-  let selectedCategory = $state("account");
-  let previousCategory = $state("account");
+  let selectedCategory = $state(appearanceOnly ? "appearance" : "account");
+  let previousCategory = $state(appearanceOnly ? "appearance" : "account");
   $effect(() => {
     if (selectedCategory === previousCategory) return;
     previousCategory = selectedCategory;
@@ -262,6 +269,13 @@
   async function saveSettings() {
     if (saving) return;
     saving = true;
+
+    if (appearanceOnly) {
+      settings.saveSettings();
+      await snapshotSettings();
+      saving = false;
+      return;
+    }
 
     if (userDataSnapshot && (userDataChanged || accountSettingsNewPassword !== "" || accountSettingsNewProfilePictureChosen)) {
       const userDataFormData = new FormData();
@@ -446,11 +460,13 @@
   onModalHide={restoreSettings}
 >
   {#snippet topButtons()}
-    <IconButton click={forceRefresh}>
-      <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { loaderAnimation = false; }}>
-        <RefreshCw/>
-      </span>
-    </IconButton>
+    {#if !appearanceOnly}
+      <IconButton click={forceRefresh}>
+        <span class="refreshButtonWrapper" class:spin={loaderAnimation} onanimationiteration={() => { loaderAnimation = false; }}>
+          <RefreshCw/>
+        </span>
+      </IconButton>
+    {/if}
   {/snippet}
 
   {#snippet buttons()}
@@ -471,7 +487,7 @@
   <div class="container">
     <ButtonList
       bind:value={selectedCategory}
-      options={settings.userData.admin ? categoriesAdmin : categories} 
+      options={appearanceOnly ? categoriesAppearanceOnly : (settings.userData.admin ? categoriesAdmin : categories)}
     />
     <main tabindex="-1">
       {#if selectedCategory === "account"}

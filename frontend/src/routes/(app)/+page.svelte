@@ -294,8 +294,8 @@
   <CalendarModal bind:showCreateModal={showNewCalendarModal} bind:showModal={showCalendarModal}/>
   <EventModal bind:showCreateModal={showNewEventModal} bind:showModal={showEventModal}/>
   <DayViewModal bind:showModal={showDateModal}/>
-  <SettingsModal bind:showModal={showSettingsModal}/>
 {/if}
+<SettingsModal bind:showModal={showSettingsModal} appearanceOnly={publicReadonly}/>
 <CreditsModal bind:showModal={showCreditsModal}/>
 
 <aside>
@@ -310,10 +310,10 @@
   </div>
 
   <Horizontal position="center">
+    <IconButton click={showSettingsModal}>
+      <Settings/>
+    </IconButton>
     {#if !publicReadonly}
-      <IconButton click={showSettingsModal}>
-        <Settings/>
-      </IconButton>
       <IconButton click={showSourceWizardModal}>
         <PlusIcon/>
       </IconButton>
