@@ -1,16 +1,16 @@
 html[data-theme="light"] {
-  --colorForegroundDark: #000000;
+  --colorForegroundDark: #222222;
   --colorForegroundBright: #ffffff;
-  --colorForegroundLink: hsl(213, 69%, 42%);
+  --colorForegroundLink: var(--accentColor, #007acc);
 
-  --colorBackgroundPrimary: #ffffff;
+  --colorBackgroundPrimary: #f7f7f7;
   --colorForegroundPrimary: var(--colorForegroundDark);
 
-  --colorBackgroundSecondary: #f0f0f0;
-  --colorForegroundSecondary: var(--colorForegroundDark);
+  --colorBackgroundSecondary: #efefef;
+  --colorForegroundSecondary: #666666;
   
-  --colorBackgroundTertiary: #e0e0e0;
-  --colorForegroundTertiary: var(--colorForegroundDark);
+  --colorBackgroundTertiary: #e1e1e1;
+  --colorForegroundTertiary: #666666;
 
   --colorBackgroundSuccess: hsl(107, 53%, 47%);
   --colorForegroundSuccess: var(--colorForegroundBright);
@@ -21,8 +21,11 @@ html[data-theme="light"] {
   --colorBackgroundDanger: hsl(0, 69%, 62%);
   --colorForegroundDanger: var(--colorForegroundBright);
 
-  --colorBackgroundAccent: hsl(213, 69%, 62%);
+  --colorBackgroundAccent: var(--accentColor, #007acc);
   --colorForegroundAccent: var(--colorForegroundBright);
   
   --colorForegroundSunday: hsl(0, 71%, 58%);
+  --colorBackgroundSelection: rgba(0, 122, 204, 0.15);
+  --colorBorderSubtle: #d6d6d6;
+  --colorBackgroundHover: #e9edf0;
 }

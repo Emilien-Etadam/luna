@@ -1,24 +1,23 @@
 <script lang="ts">
   import type { Settings } from "../../../lib/client/data/settings.svelte";
-  import type { Option } from "../../../types/options";
   import { UserSettingKeys } from "../../../types/settings";
+  import ColorInput from "../../forms/ColorInput.svelte";
   import SelectInput from "../../forms/SelectInput.svelte";
   import SliderInput from "../../forms/SliderInput.svelte";
   import ToggleInput from "../../forms/ToggleInput.svelte";
   import SectionDivider from "../../layout/SectionDivider.svelte";
+  import type { Option } from "../../../types/options";
 
   interface Props {
     settings: Settings;
-    lightThemes: Option<string>[];
-    darkThemes: Option<string>[];
     fonts: Option<string>[];
+    accentColor: string;
   }
 
   let {
     settings,
-    lightThemes,
-    darkThemes,
     fonts,
+    accentColor = $bindable(),
   }: Props = $props();
 </script>
 
@@ -89,17 +88,10 @@
   step={0.05}
   detentTransform={(value) => `${Math.round(value * 100)}%`}
 />
-<SelectInput
-  name={UserSettingKeys.ThemeLight}
-  placeholder="Light Theme"
-  bind:value={settings.userSettings[UserSettingKeys.ThemeLight]}
-  options={lightThemes}
-/>
-<SelectInput
-  name={UserSettingKeys.ThemeDark}
-  placeholder="Dark Theme"
-  bind:value={settings.userSettings[UserSettingKeys.ThemeDark]}
-  options={darkThemes}
+<ColorInput
+  name="Accent Color"
+  bind:color={accentColor}
+  editable={true}
 />
 <ToggleInput
   name={UserSettingKeys.ThemeSynchronize}

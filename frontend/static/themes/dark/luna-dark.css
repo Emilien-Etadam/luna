@@ -1,28 +1,31 @@
 html[data-theme="dark"] {
   --colorForegroundDark: #000000;
-  --colorForegroundBright: hsl(220, 10%, 80%);
-  --colorForegroundLink: hsl(213, 69%, 42%);
+  --colorForegroundBright: #cccccc;
+  --colorForegroundLink: var(--accentColor, #007acc);
 
-  --colorBackgroundPrimary: hsl(220, 10%, 12%);
+  --colorBackgroundPrimary: #1e1e1e;
   --colorForegroundPrimary: var(--colorForegroundBright);
 
-  --colorBackgroundSecondary: hsl(220, 10%, 22%);
-  --colorForegroundSecondary: var(--colorForegroundBright);
+  --colorBackgroundSecondary: #252526;
+  --colorForegroundSecondary: #858585;
 
-  --colorBackgroundTertiary: hsl(220, 10%, 32%);
-  --colorForegroundTertiary: var(--colorForegroundBright);
+  --colorBackgroundTertiary: #333333;
+  --colorForegroundTertiary: #858585;
 
-  --colorBackgroundSuccess: hsl(107, 53%, 37%);
-  --colorForegroundSuccess: var(--colorForegroundDark);
+  --colorBackgroundSuccess: #5a8f5a;
+  --colorForegroundSuccess: #f3f7f3;
 
-  --colorBackgroundWarning: hsl(39, 100%, 40%);
-  --colorForegroundWarning: var(--colorForegroundDark);
+  --colorBackgroundWarning: #8f7a52;
+  --colorForegroundWarning: #f7f3ea;
 
-  --colorBackgroundDanger: hsl(0, 69%, 52%);
-  --colorForegroundDanger: var(--colorForegroundDark);
+  --colorBackgroundDanger: #8a5a5a;
+  --colorForegroundDanger: #f8efef;
 
-  --colorBackgroundAccent: hsl(213, 69%, 52%);
-  --colorForegroundAccent: var(--colorForegroundDark);
+  --colorBackgroundAccent: var(--accentColor, #007acc);
+  --colorForegroundAccent: #ffffff;
   
-  --colorForegroundSunday: hsl(0, 71%, 58%);
+  --colorForegroundSunday: #c26b6b;
+  --colorBackgroundSelection: #094771;
+  --colorBorderSubtle: #2b2b2b;
+  --colorBackgroundHover: #2a2d2e;
 }

@@ -52,6 +52,7 @@
   const invites = getRegistrationInvites();
   const users = getUsers();
   const oauthClients = getOauthClients();
+  const theme = getTheme();
 
   const today = new Date();
 
@@ -192,13 +193,17 @@
   let userDataChanged = $derived(!deepEquality(settings.userData, userDataSnapshot));
   let userSettingsChanged = $derived(!deepEquality(settings.userSettings, userSettingsSnapshot));
   let globalSettingsChanged = $derived(!deepEquality(settings.globalSettings, globalSettingsSnapshot));
-  let anyChanged = $derived(userDataChanged || userSettingsChanged || globalSettingsChanged);
+  let accentColor = $state(theme.getAccentColor());
+  let accentColorSnapshot = $state(theme.getAccentColor());
+  let accentColorChanged = $derived(accentColor !== accentColorSnapshot);
+  let anyChanged = $derived(userDataChanged || userSettingsChanged || globalSettingsChanged || accentColorChanged);
 
   // Snapshot and restore functions
   async function snapshotSettings() {
     userDataSnapshot = await deepCopy(settings.userData);
     userSettingsSnapshot = await deepCopy(settings.userSettings);
     globalSettingsSnapshot = await deepCopy(settings.globalSettings);
+    accentColorSnapshot = accentColor;
   }
 
   async function restoreSettings() {
@@ -207,6 +212,8 @@
     if (userDataSnapshot) settings.userData = await deepCopy(userDataSnapshot);
     if (userSettingsSnapshot) settings.userSettings = await deepCopy(userSettingsSnapshot);
     if (globalSettingsSnapshot) settings.globalSettings = await deepCopy(globalSettingsSnapshot);
+    accentColor = accentColorSnapshot;
+    theme.setAccentColor(accentColor);
 
     refetchProfilePicture();
   }
@@ -278,6 +285,7 @@
     saving = true;
 
     if (appearanceOnly) {
+      theme.setAccentColor(accentColor);
       settings.saveSettings();
       await snapshotSettings();
       saving = false;
@@ -388,6 +396,8 @@
     }
 
     settings.saveSettings();
+    theme.setAccentColor(accentColor);
+    accentColorSnapshot = accentColor;
     saving = false;
   }
 
@@ -512,9 +522,8 @@
       {:else if selectedCategory === "appearance"}
         <AppearanceSettingsTab
           settings={settings}
-          lightThemes={lightThemes}
-          darkThemes={darkThemes}
-          fonts={fonts} 
+          fonts={fonts}
+          bind:accentColor={accentColor}
         />
       {:else if selectedCategory === "developer"}
         <DeveloperSettingsTab

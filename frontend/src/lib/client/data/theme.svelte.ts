@@ -6,14 +6,19 @@ import { Settings } from "./settings.svelte";
 
 export class Theme {
   private lightMode: boolean = $state(false);
+  private accentColor: string = $state("#007acc");
   private settings: Settings;
   
   constructor(settings: Settings) {
     this.settings = settings;
     if (!browser) return;
     this.fetchFromStorage();
+    this.fetchAccentFromStorage();
     this.fetchFromSystem();
-    window.addEventListener("storage", () => this.fetchFromStorage());
+    window.addEventListener("storage", () => {
+      this.fetchFromStorage();
+      this.fetchAccentFromStorage();
+    });
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => this.fetchFromSystem());
   }
 
@@ -35,6 +40,18 @@ export class Theme {
     localStorage.setItem("theme", this.lightMode ? "light" : "dark");
   }
 
+  private fetchAccentFromStorage() {
+    const color = localStorage.getItem("accentColor");
+    if (color && /^#[0-9a-fA-F]{6}$/.test(color)) {
+      this.accentColor = color.toLowerCase();
+    }
+  }
+
+  private saveAccentToStorage() {
+    if (!browser) return;
+    localStorage.setItem("accentColor", this.accentColor);
+  }
+
   public setLightMode() {
     this.lightMode = true;
     this.saveToStorage();
@@ -54,9 +71,20 @@ export class Theme {
     return this.lightMode;
   }
 
+  public getAccentColor() {
+    return this.accentColor;
+  }
+
+  public setAccentColor(color: string) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(color)) return;
+    this.accentColor = color.toLowerCase();
+    this.saveAccentToStorage();
+  }
+
   public refetchTheme() {
     if (!browser) return;
     this.fetchFromStorage();
+    this.fetchAccentFromStorage();
     this.fetchFromSystem();
   }
 }

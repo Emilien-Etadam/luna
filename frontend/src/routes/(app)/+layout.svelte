@@ -28,6 +28,17 @@
   const connectivity = $derived(getConnectivity());
   const theme = $derived(getTheme());
 
+  function hexToRgb(color: string): [number, number, number] {
+    const match = color.match(/^#([0-9a-fA-F]{6})$/);
+    if (!match) return [0, 122, 204];
+    const raw = match[1];
+    return [
+      parseInt(raw.slice(0, 2), 16),
+      parseInt(raw.slice(2, 4), 16),
+      parseInt(raw.slice(4, 6), 16),
+    ];
+  }
+
   let notifsWrapper: HTMLDivElement;
 
   // We store the height of every notification element so we can calculate the
@@ -99,8 +110,8 @@
   }
 
   // Prevent "flashing" by unloading the previous theme/font only after loading the next one.
-  let currentThemeLight = $derived(settings.userSettings[UserSettingKeys.ThemeLight]);
-  let currentThemeDark = $derived(settings.userSettings[UserSettingKeys.ThemeDark]);
+  let currentThemeLight = $derived("luna-light");
+  let currentThemeDark = $derived("luna-dark");
   let previousThemeLight = $state("");
   let previousThemeDark = $state("");
   $effect(() => { setTimeout((val) => previousThemeLight = val, 100, currentThemeLight); });
@@ -125,6 +136,13 @@
       }
 
       :root {
+        --accentColor: ${theme.getAccentColor()};
+        --accentColorRgb: ${hexToRgb(theme.getAccentColor()).join(", ")};
+        --colorBackgroundAccent: ${theme.getAccentColor()};
+        --colorForegroundAccent: #ffffff;
+        --colorForegroundLink: ${theme.getAccentColor()};
+        --colorBackgroundSelection: rgba(${hexToRgb(theme.getAccentColor()).join(", ")}, 0.38);
+
         --uiScaling: ${settings.userSettings[UserSettingKeys.UiScaling]};
 
         ${settings.userSettings[UserSettingKeys.DisplayRoundedCorners] ? "" : "\
