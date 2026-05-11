@@ -73,6 +73,20 @@
     return Array.from(colors);
   });
 
+  /** Plusieurs calendriers / propriétaires (après fusion en vue publique). */
+  let isMergedEvent = $derived.by(() => {
+    if (!event) return false;
+    const owners = event.calendar_owner_names?.filter(Boolean) ?? [];
+    return owners.length > 1 || participantColors.length > 1;
+  });
+
+  let mergedOwnersLabel = $derived.by(() => {
+    if (!event || !isMergedEvent) return "";
+    return (event.calendar_owner_names?.filter(Boolean) ?? []).join(", ");
+  });
+
+  let showLeadingColorDots = $derived(participantColors.length > 1);
+
   // Désaccentue les événements terminés (visuel calme, sans masquer)
   let isPast = $derived(event !== null && event.date.end.getTime() < Date.now());
 
@@ -212,11 +226,21 @@
     opacity: 0.75;
   }
 
-  span.participants {
+  span.participantsLeading {
     flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 4px;
+  }
+
+  span.mergedOwners {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-ui);
+    opacity: 0.78;
   }
 
   /* Variante "pastille" : pas de fond, dot coloré + texte calme */
@@ -277,7 +301,13 @@
       z-index: {16 - getDayIndex(date)};
     "
   >
-    {#if showOnlyCircle}
+    {#if showLeadingColorDots}
+      <span class="participantsLeading">
+        {#each participantColors as color (color)}
+          <ColorCircle color={color} size="small" />
+        {/each}
+      </span>
+    {:else if showOnlyCircle}
       <ColorCircle
         color={GetEventColor(event)}
         size="small"
@@ -291,12 +321,8 @@
     <span class="name">
       {event.name}
     </span>
-    {#if !showOnlyCircle && participantColors.length > 1}
-      <span class="participants">
-        {#each participantColors as color (color)}
-          <ColorCircle color={color} size="small" />
-        {/each}
-      </span>
+    {#if isMergedEvent && mergedOwnersLabel}
+      <span class="mergedOwners" title={mergedOwnersLabel}>{mergedOwnersLabel}</span>
     {/if}
     {#if (event.desc && event.desc != "")}
       <span class="icons">

@@ -315,6 +315,17 @@
     if (own) colors.add(own);
     return Array.from(colors);
   }
+
+  function agendaIsMergedEvent(event: EventModel): boolean {
+    const owners = event.calendar_owner_names?.filter(Boolean) ?? [];
+    const colors = agendaParticipantColors(event);
+    return owners.length > 1 || colors.length > 1;
+  }
+
+  function agendaMergedOwnersLabel(event: EventModel): string {
+    if (!agendaIsMergedEvent(event)) return "";
+    return (event.calendar_owner_names?.filter(Boolean) ?? []).join(", ");
+  }
 </script>
 
 <style lang="scss">
@@ -580,12 +591,39 @@
     align-items: center;
     gap: 10px;
     min-width: 0;
+    flex: 1;
     font-size: var(--font-size-ui);
     font-weight: var(--font-weight-ui);
     color: var(--fg-primary);
-    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  span.agendaMainLine {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  span.agendaTitle {
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span.agendaOwners {
+    flex-shrink: 0;
+    max-width: min(50%, 14rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--font-size-xs);
+    color: var(--fg-muted);
+    font-weight: var(--font-weight-ui);
   }
 
   span.eventDot {
@@ -736,6 +774,7 @@
           >
             <h3 class="agendaDate">{day.date.toLocaleDateString([], { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</h3>
             {#each day.events as event (event.id + event.date.start.getTime())}
+              {@const agendaOwners = agendaMergedOwnersLabel(event)}
               <div
                 class="agendaItem"
                 role="button"
@@ -754,7 +793,12 @@
                   {#each agendaParticipantColors(event) as color (color)}
                     <span class="eventDot" style="background-color: {color}"></span>
                   {/each}
-                  {event.name}
+                  <span class="agendaMainLine">
+                    <span class="agendaTitle">{event.name}</span>
+                    {#if agendaOwners}
+                      <span class="agendaOwners" title={agendaOwners}> · {agendaOwners}</span>
+                    {/if}
+                  </span>
                 </span>
               </div>
             {/each}
