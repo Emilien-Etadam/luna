@@ -12,15 +12,16 @@ import (
 )
 
 type exposedCalendar struct {
-	Id           types.ID     `json:"id"`
-	Source       types.ID     `json:"source"`
-	Name         string       `json:"name"`
-	Desc         string       `json:"desc"`
-	Color        *types.Color `json:"color"`
-	Overridden   bool         `json:"overridden"`
-	CanEdit      bool         `json:"can_edit"` // TODO: might exclude from here and add to "detailed" view instead
-	CanDelete    bool         `json:"can_delete"`
-	CanAddEvents bool         `json:"can_add_events"`
+	Id            types.ID     `json:"id"`
+	Source        types.ID     `json:"source"`
+	Name          string       `json:"name"`
+	Desc          string       `json:"desc"`
+	Color         *types.Color `json:"color"`
+	Overridden    bool         `json:"overridden"`
+	OwnerUsername string       `json:"owner_username"`
+	CanEdit       bool         `json:"can_edit"` // TODO: might exclude from here and add to "detailed" view instead
+	CanDelete     bool         `json:"can_delete"`
+	CanAddEvents  bool         `json:"can_add_events"`
 }
 
 func GetCalendars(c *gin.Context) {
@@ -57,18 +58,27 @@ func GetCalendars(c *gin.Context) {
 		return
 	}
 
+	ownerUsername := ""
+	if ou, ouErr := u.Tx.Queries().GetUsernameById(userId); ouErr != nil {
+		u.Error(ouErr)
+		return
+	} else {
+		ownerUsername = ou
+	}
+
 	// Convert to exposed format
 	convertedCals := make([]exposedCalendar, len(cals))
 	for i, cal := range cals {
 		u.Config.Cache.Cache(userId, cal)
 
 		convertedCals[i] = exposedCalendar{
-			Id:         cal.GetId(),
-			Source:     cal.GetSource().GetId(),
-			Name:       cal.GetName(),
-			Desc:       cal.GetDesc(),
-			Color:      cal.GetColor(),
-			Overridden: cal.GetOverridden(),
+			Id:            cal.GetId(),
+			Source:        cal.GetSource().GetId(),
+			Name:          cal.GetName(),
+			Desc:          cal.GetDesc(),
+			Color:         cal.GetColor(),
+			Overridden:    cal.GetOverridden(),
+			OwnerUsername: ownerUsername,
 			//Settings: cal.GetSettings(),
 			CanEdit:      cal.CanEdit(),
 			CanDelete:    cal.CanDelete(),
@@ -105,14 +115,23 @@ func GetCalendar(c *gin.Context) {
 
 	u.Config.Cache.Cache(userId, cal)
 
+	ownerUsername := ""
+	if ou, ouErr := u.Tx.Queries().GetUsernameById(userId); ouErr != nil {
+		u.Error(ouErr)
+		return
+	} else {
+		ownerUsername = ou
+	}
+
 	// Convert to exposed format
 	convertedCal := exposedCalendar{
-		Id:         cal.GetId(),
-		Source:     cal.GetSource().GetId(),
-		Name:       cal.GetName(),
-		Desc:       cal.GetDesc(),
-		Color:      cal.GetColor(),
-		Overridden: cal.GetOverridden(),
+		Id:            cal.GetId(),
+		Source:        cal.GetSource().GetId(),
+		Name:          cal.GetName(),
+		Desc:          cal.GetDesc(),
+		Color:         cal.GetColor(),
+		Overridden:    cal.GetOverridden(),
+		OwnerUsername: ownerUsername,
 		//Settings: cal.GetSettings(),
 		CanEdit:      cal.CanEdit(),
 		CanDelete:    cal.CanDelete(),

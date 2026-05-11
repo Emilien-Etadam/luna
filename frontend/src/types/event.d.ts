@@ -14,6 +14,8 @@ type EventModel = {
   can_edit: boolean;
   can_delete: boolean;
   participant_colors?: string[];
+  /** Après fusion multi-calendriers (vue publique) : noms des propriétaires concernés. */
+  calendar_owner_names?: string[];
 };
 
 type EventModelChanges = {

@@ -237,6 +237,11 @@ export class Repository {
     return "";
   }
 
+  private calendarOwnerLabel(event: EventModel): string {
+    const raw = this.calendarsMap.get(event.calendar)?.owner_username;
+    return typeof raw === "string" ? raw.trim() : "";
+  }
+
   /** Clé stable pour fusionner le même événement provenant de plusieurs calendriers (nom + plage). */
   private duplicateEventsMergeKey(event: EventModel): string {
     const rawName = event.name ?? "";
@@ -256,6 +261,17 @@ export class Repository {
     return [name, startIso, endIso, "0"].join("|");
   }
 
+  /** Fusionne les descriptions de plusieurs calendriers pour la même occurrence fusionnée (liens / détails complémentaires). */
+  private mergeDuplicateEventDescriptions(a: string, b: string): string {
+    const ta = (a ?? "").trim();
+    const tb = (b ?? "").trim();
+    if (!tb) return ta;
+    if (!ta) return tb;
+    if (ta.includes(tb)) return ta;
+    if (tb.includes(ta)) return tb;
+    return `${ta}\n\n${tb}`;
+  }
+
   /** En mode public lecture seule : fusionne les occurrences identiques (nom + plage) ; agrège les couleurs pour les pastilles « participants ». */
   private mergeDuplicateEvents(events: EventModel[]): EventModel[] {
     const byKey = new Map<string, EventModel>();
@@ -264,10 +280,12 @@ export class Repository {
 
       const existing = byKey.get(key);
       const ownColor = this.resolveEventColor(event) || null;
+      const ownerLabel = this.calendarOwnerLabel(event);
       if (!existing) {
         byKey.set(key, {
           ...event,
           participant_colors: ownColor ? [ownColor] : [],
+          calendar_owner_names: ownerLabel ? [ownerLabel] : [],
         });
         continue;
       }
@@ -275,6 +293,12 @@ export class Repository {
       const colors = new Set(existing.participant_colors || []);
       if (ownColor) colors.add(ownColor);
       existing.participant_colors = Array.from(colors);
+      existing.desc = this.mergeDuplicateEventDescriptions(existing.desc ?? "", event.desc ?? "");
+      if (ownerLabel) {
+        const owners = new Set(existing.calendar_owner_names || []);
+        owners.add(ownerLabel);
+        existing.calendar_owner_names = Array.from(owners);
+      }
     }
     return Array.from(byKey.values());
   }

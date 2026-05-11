@@ -101,6 +101,12 @@
       overridden: original.overridden,
       can_edit: original.can_edit,
       can_delete: original.can_delete,
+      ...(original.participant_colors?.length
+        ? { participant_colors: [...original.participant_colors] }
+        : {}),
+      ...(original.calendar_owner_names?.length
+        ? { calendar_owner_names: [...original.calendar_owner_names] }
+        : {}),
     }
     if (event.date.allDay && event.date.end.getTime() !== event.date.start.getTime() && event.date.end.getHours() === 0 && event.date.end.getMinutes() === 0 && event.date.end.getSeconds() === 0 && event.date.end.getMilliseconds() === 0) {
       event.date.end.setDate(event.date.end.getDate() - 1);
@@ -129,14 +135,21 @@
       .map(calendar => ({ value: calendar.id, name: calendar.name }))
   );
 
-  const meetingLinks = $derived.by(() => {
+  /** Libellés des propriétaires du flux (compte Luna), plusieurs après fusion publique multi-calendriers. */
+  const calendarOwnersDisplay = $derived.by(() => {
+    if (!event?.id) return "";
+    const merged = event.calendar_owner_names?.filter(Boolean) ?? [];
+    if (merged.length > 0) return merged.join(", ");
+    const ou = repository.calendarsMap.get(event.calendar)?.owner_username?.trim();
+    return ou ?? "";
+  });
+
+  /** Liens http(s) extraits de la description (identique pour tous les modes : visio, agenda, pièces jointes URL, etc.). */
+  const descriptionLinks = $derived.by(() => {
     if (!event?.desc) return [];
-    const matches = event.desc.match(/https?:\/\/[^\s)]+/gi) || [];
-    const deduped = Array.from(new Set(matches));
-    return deduped.filter((url) => {
-      const lowered = url.toLowerCase();
-      return lowered.includes("zoom.us") || lowered.includes("teams.microsoft.com");
-    });
+    const matches = event.desc.match(/https?:\/\/[^\s<>"')\]}]+/gi) || [];
+    const trimmed = matches.map((url) => url.replace(/[.,;:!?)]+$/, ""));
+    return Array.from(new Set(trimmed));
   });
 
   const onDelete = async () => {
@@ -220,13 +233,13 @@
   @use "../../styles/colors.scss";
   @use "../../styles/dimensions.scss";
 
-  div.meetingLinks {
+  div.descriptionLinks {
     display: flex;
     flex-direction: column;
     gap: dimensions.$gapSmaller;
   }
 
-  a.meetingLink {
+  a.descriptionLink {
     color: colors.$foregroundLink;
     text-decoration: underline;
     word-break: break-all;
@@ -249,16 +262,19 @@
   {#if event != EmptyEvent}
     <TextInput bind:value={event.name} name="name" placeholder="Name" editable={editMode} />
     <SelectInput bind:value={event.calendar} name="calendar" placeholder="Calendar" options={selectableCalendars} editable={editMode && eventSourceType !== "ical"} />
+    {#if calendarOwnersDisplay !== ""}
+      <TextInput value={calendarOwnersDisplay} name="calendar_owners" placeholder="Propriétaire(s) du calendrier" editable={false} />
+    {/if}
     {#if editMode}
       <ColorInput bind:color={event.color} name="color" editable={editMode} />
     {/if}
     {#if editMode || event.desc}
       <TextInput bind:value={event.desc} name="desc" placeholder="Description" multiline={true} editable={editMode} />
     {/if}
-    {#if !editMode && meetingLinks.length > 0}
-      <div class="meetingLinks">
-        {#each meetingLinks as link (link)}
-          <a class="meetingLink" href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+    {#if !editMode && descriptionLinks.length > 0}
+      <div class="descriptionLinks">
+        {#each descriptionLinks as link (link)}
+          <a class="descriptionLink" href={link} target="_blank" rel="noopener noreferrer">{link}</a>
         {/each}
       </div>
     {/if}

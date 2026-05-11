@@ -68,6 +68,14 @@ func GetPublicSourceCalendars(c *gin.Context) {
 		return
 	}
 
+	ownerUsername := ""
+	if ou, ouErr := u.Tx.Queries().GetUsernameById(userId); ouErr != nil {
+		u.Error(ouErr)
+		return
+	} else {
+		ownerUsername = ou
+	}
+
 	source, tr := cache.GetCached(u.Config.Cache, userId, sourceId, u.Context, func() (types.Source, *errors.ErrorTrace) {
 		return u.Tx.Queries().GetSource(userId, sourceId, u.Context, u.Config)
 	})
@@ -92,15 +100,16 @@ func GetPublicSourceCalendars(c *gin.Context) {
 	for i, cal := range cals {
 		u.Config.Cache.Cache(userId, cal)
 		converted[i] = exposedCalendar{
-			Id:           cal.GetId(),
-			Source:       cal.GetSource().GetId(),
-			Name:         cal.GetName(),
-			Desc:         "",
-			Color:        cal.GetColor(),
-			Overridden:   cal.GetOverridden(),
-			CanEdit:      false,
-			CanDelete:    false,
-			CanAddEvents: false,
+			Id:            cal.GetId(),
+			Source:        cal.GetSource().GetId(),
+			Name:          cal.GetName(),
+			Desc:          "",
+			Color:         cal.GetColor(),
+			Overridden:    cal.GetOverridden(),
+			OwnerUsername: ownerUsername,
+			CanEdit:       false,
+			CanDelete:     false,
+			CanAddEvents:  false,
 		}
 	}
 	u.Success(&gin.H{"calendars": converted})
@@ -201,7 +210,7 @@ func GetPublicCalendarEvents(c *gin.Context) {
 			Id:         event.GetId(),
 			Calendar:   event.GetCalendar().GetId(),
 			Name:       event.GetName(),
-			Desc:       "",
+			Desc:       event.GetDesc(),
 			Color:      event.GetColor(),
 			Date:       event.GetDate(),
 			Overridden: event.GetOverridden(),

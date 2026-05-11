@@ -82,6 +82,29 @@ func (q *Queries) GetUserIdFromUsername(username string) (types.ID, *errors.Erro
 	return types.IdFromUuid(id), nil
 }
 
+// GetUsernameById returns the username for a user id (e.g. calendar/source owner label).
+func (q *Queries) GetUsernameById(userId types.ID) (string, *errors.ErrorTrace) {
+	var username string
+
+	err := q.Tx.QueryRow(
+		q.Context,
+		`SELECT username FROM users WHERE id = $1`,
+		userId.UUID(),
+	).Scan(&username)
+
+	switch err {
+	case nil:
+		return username, nil
+	case pgx.ErrNoRows:
+		return "", nil
+	default:
+		return "", errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get username for user %v", userId).
+			AltStr(errors.LvlPlain, "Database error")
+	}
+}
+
 func (q *Queries) IsAdmin(userId types.ID) (bool, *errors.ErrorTrace) {
 	var err error
 
