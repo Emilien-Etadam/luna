@@ -237,15 +237,30 @@ export class Repository {
     return "";
   }
 
-  private mergePublicDuplicateEvents(events: EventModel[]): EventModel[] {
+  /** Clé stable pour fusionner le même événement provenant de plusieurs calendriers (nom + plage). */
+  private duplicateEventsMergeKey(event: EventModel): string {
+    const rawName = event.name ?? "";
+    const name =
+      typeof rawName === "string"
+        ? rawName.trim().replace(/\s+/g, " ")
+        : "";
+    const start = event.date.start;
+    const end = event.date.end;
+    if (event.date.allDay) {
+      const dayKey = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return [name, dayKey(start), dayKey(end), "1"].join("|");
+    }
+    const startIso = new Date(Math.floor(start.getTime() / 1000) * 1000).toISOString();
+    const endIso = new Date(Math.floor(end.getTime() / 1000) * 1000).toISOString();
+    return [name, startIso, endIso, "0"].join("|");
+  }
+
+  /** En mode public lecture seule : fusionne les occurrences identiques (nom + plage) ; agrège les couleurs pour les pastilles « participants ». */
+  private mergeDuplicateEvents(events: EventModel[]): EventModel[] {
     const byKey = new Map<string, EventModel>();
     for (const event of events) {
-      const key = [
-        event.name || "",
-        event.date.start.toISOString(),
-        event.date.end.toISOString(),
-        event.date.allDay ? "1" : "0",
-      ].join("|");
+      const key = this.duplicateEventsMergeKey(event);
 
       const existing = byKey.get(key);
       const ownColor = this.resolveEventColor(event) || null;
@@ -280,7 +295,7 @@ export class Repository {
         .map(x => [x.id, x])
       ).values()];
       this.events = this.isPublicReadOnly()
-        ? this.mergePublicDuplicateEvents(visibleEvents)
+        ? this.mergeDuplicateEvents(visibleEvents)
         : visibleEvents;
     }, this.spoolerDelay)
   }
@@ -779,7 +794,7 @@ export class Repository {
     if (!this.eventsCache.has(event.calendar)) return;
     const cacheEntry = this.eventsCache.get(event.calendar)?.get(month);
     if (!cacheEntry || !cacheEntry.value) return;
-    cacheEntry.value = cacheEntry.value.filter((idAndDate) => idAndDate[0] !== event.id);
+    cacheEntry.value = cacheEntry.value.filter((cachedId) => cachedId !== event.id);
   }
 
   async getAllEvents(start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
