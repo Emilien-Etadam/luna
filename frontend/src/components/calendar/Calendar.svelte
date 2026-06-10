@@ -13,6 +13,7 @@
 
   interface Props {
     date: Date;
+    today: Date;
     view: "month" | "week" | "day";
     events: EventModel[];
     readOnly?: boolean;
@@ -20,14 +21,13 @@
 
   let {
     date,
+    today,
     view,
     events,
     readOnly = false,
   }: Props = $props();
 
   const settings = getSettings();
-
-  let today = new Date();
 
   let currentlyClickedEvent = $state<EventModel | null>(null);
   let currentlyHoveredEvent = $state<EventModel | null>(null);

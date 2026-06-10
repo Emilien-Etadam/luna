@@ -107,15 +107,34 @@
     date = new Date(today);
   }
 
+  function isAnchoredOnToday(anchorDate: Date, currentView: typeof view, referenceToday: Date): boolean {
+    if (currentView === "week") {
+      const range = getVisibleRange(anchorDate, "week");
+      return isInRange(referenceToday, range.start, range.end);
+    }
+    if (currentView === "day" || currentView === "agenda") {
+      return isSameDay(anchorDate, referenceToday);
+    }
+    return isSameDay(anchorDate, referenceToday);
+  }
+
   function syncTodayIfNeeded() {
     const now = new Date();
     if (isSameDay(today, now)) return;
 
-    const wasShowingToday = isSameDay(date, today);
+    const shouldAdvanceDate = isAnchoredOnToday(date, view, today);
     today = now;
-    if (wasShowingToday) {
+    if (shouldAdvanceDate) {
       date = new Date(today);
     }
+  }
+
+  function goToView(target: typeof view) {
+    syncTodayIfNeeded();
+    if (target === "day" || target === "week" || target === "agenda") {
+      date = new Date();
+    }
+    view = target;
   }
 
   let dayChangeTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -709,13 +728,13 @@
     <button class="activityIcon" class:active={view === "month"} onclick={() => view = "month"} title="Mois">
       <CalendarDays size={16}/>
     </button>
-    <button class="activityIcon" class:active={view === "week"} onclick={() => view = "week"} title="Semaine">
+    <button class="activityIcon" class:active={view === "week"} onclick={() => goToView("week")} title="Semaine">
       <CalendarRange size={16}/>
     </button>
-    <button class="activityIcon" class:active={view === "day"} onclick={() => view = "day"} title="Jour">
+    <button class="activityIcon" class:active={view === "day"} onclick={() => goToView("day")} title="Jour">
       <CalendarSingle size={16}/>
     </button>
-    <button class="activityIcon" class:active={view === "agenda"} onclick={() => { syncTodayIfNeeded(); date = new Date(); view = "agenda"; }} title="Agenda">
+    <button class="activityIcon" class:active={view === "agenda"} onclick={() => goToView("agenda")} title="Agenda">
       <List size={16}/>
     </button>
   </nav>
@@ -838,6 +857,7 @@
   {:else}
     <Calendar
       date={date}
+      {today}
       view={view}
       events={repository.events}
       readOnly={publicReadonly}
