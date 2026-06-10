@@ -22,6 +22,14 @@ export function isInRange(date: Date, start: Date, end: Date): boolean {
   return date.getTime() >= start.getTime() && date.getTime() <= end.getTime();
 }
 
+export function eventCoversDay(event: { date: { start: Date; end: Date } }, day: Date): boolean {
+  const dayStart = new Date(day);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setHours(23, 59, 59, 999);
+  return event.date.start.getTime() <= dayEnd.getTime() && event.date.end.getTime() > dayStart.getTime();
+}
+
 export function getDayIndex(date: Date) {
   const settings = getSettings();
   const startOfWeek = settings.userSettings[UserSettingKeys.FirstDayOfWeek];

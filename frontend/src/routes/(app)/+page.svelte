@@ -24,7 +24,7 @@
   import { getConnectivity, Reachability } from "$lib/client/data/connectivity.svelte";
   import Button from "../../components/interactive/Button.svelte";
   import DayViewModal from "../../components/modals/DayViewModal.svelte";
-  import { getDayIndex, getLocalDayKey, getMsUntilNextMidnight, isInRange, isSameDay } from "../../lib/common/date";
+  import { eventCoversDay, getDayIndex, getLocalDayKey, getMsUntilNextMidnight, isInRange, isSameDay } from "../../lib/common/date";
   import { compareEventsByStartDate } from "../../lib/common/comparators";
   import { GetEventColor } from "$lib/common/colors";
   import SourceWizardModal from "../../components/modals/SourceWizardModal.svelte";
@@ -333,13 +333,25 @@
       byDay.set(key, { date: new Date(todayMidnight), events: [] });
     }
 
+    const rangeEndDay = new Date(end);
+    rangeEndDay.setHours(0, 0, 0, 0);
+
     for (const event of inRangeEvents) {
-      const day = new Date(event.date.start);
-      day.setHours(0, 0, 0, 0);
-      if (day.getTime() < cutoff.getTime()) day.setTime(cutoff.getTime());
-      const key = getLocalDayKey(day);
-      if (!byDay.has(key)) byDay.set(key, { date: day, events: [] });
-      byDay.get(key)?.events.push(event);
+      let cursor = new Date(event.date.start);
+      cursor.setHours(0, 0, 0, 0);
+      if (cursor.getTime() < cutoff.getTime()) {
+        cursor = new Date(cutoff);
+      }
+
+      while (cursor.getTime() <= rangeEndDay.getTime()) {
+        if (eventCoversDay(event, cursor)) {
+          const key = getLocalDayKey(cursor);
+          if (!byDay.has(key)) byDay.set(key, { date: new Date(cursor), events: [] });
+          byDay.get(key)?.events.push(event);
+        }
+        if (cursor.getTime() >= event.date.end.getTime()) break;
+        cursor.setDate(cursor.getDate() + 1);
+      }
     }
 
     return Array.from(byDay.values()).sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -362,6 +374,23 @@
       }
     });
   });
+
+  function agendaTimeLabel(event: EventModel, dayDate: Date): string {
+    if (event.date.allDay) return "Journee";
+
+    const dayStart = new Date(dayDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(dayStart);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    if (isSameDay(event.date.start, dayDate)) {
+      return event.date.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+    if (event.date.end.getTime() > dayStart.getTime() && event.date.end.getTime() <= dayEnd.getTime()) {
+      return `jusqu'à ${event.date.end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    }
+    return "En cours";
+  }
 
   function openAgendaEvent(event: EventModel) {
     showEventModal(event).then((updatedEvent: EventModel) => event = updatedEvent).catch(NoOp);
@@ -838,7 +867,7 @@
             data-agenda-today={getLocalDayKey(day.date) === todayKey ? "true" : "false"}
           >
             <h3 class="agendaDate">{day.date.toLocaleDateString([], { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</h3>
-            {#each day.events as event (event.id + event.date.start.getTime())}
+            {#each day.events as event (event.id + getLocalDayKey(day.date))}
               {@const agendaOwners = agendaMergedOwnersLabel(event)}
               <div
                 class="agendaItem"
@@ -847,13 +876,7 @@
                 onclick={() => openAgendaEvent(event)}
                 onkeydown={(e) => agendaItemKeydown(e, event)}
               >
-                <span class="agendaTime">
-                  {#if event.date.allDay}
-                    Journee
-                  {:else}
-                    {event.date.start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                  {/if}
-                </span>
+                <span class="agendaTime">{agendaTimeLabel(event, day.date)}</span>
                 <span class="agendaName">
                   {#each agendaParticipantColors(event) as color (color)}
                     <span class="eventDot" style="background-color: {color}"></span>
