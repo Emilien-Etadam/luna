@@ -52,7 +52,7 @@ func GetCalendars(c *gin.Context) {
 		return
 	}
 
-	cals, err := u.Tx.Queries().OverrideCalendars(calsFromSource)
+	cals, err := u.Tx.Queries().MergeCalendarsOverridesReadOnly(calsFromSource)
 	if err != nil {
 		u.Error(err)
 		return
@@ -107,11 +107,12 @@ func GetCalendar(c *gin.Context) {
 		return
 	}
 
-	cal, err := u.Tx.Queries().OverrideCalendar(calFromSource)
+	cals, err := u.Tx.Queries().MergeCalendarsOverridesReadOnly([]types.Calendar{calFromSource})
 	if err != nil {
 		u.Error(err)
 		return
 	}
+	cal := cals[0]
 
 	u.Config.Cache.Cache(userId, cal)
 

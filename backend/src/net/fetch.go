@@ -62,6 +62,19 @@ func FetchBytes(
 	accept string,
 	ctx context.Context,
 ) ([]byte, *errors.ErrorTrace) {
+	return FetchBytesWithHeaders(reqUrl, httpMethod, auth, body, bodyType, accept, nil, ctx)
+}
+
+func FetchBytesWithHeaders(
+	reqUrl *types.Url,
+	httpMethod string,
+	auth types.AuthMethod,
+	body any,
+	bodyType string,
+	accept string,
+	extraHeaders map[string]string,
+	ctx context.Context,
+) ([]byte, *errors.ErrorTrace) {
 	// Serialize body
 	var payload io.Reader = nil
 	if body != nil {
@@ -107,6 +120,9 @@ func FetchBytes(
 	}
 	if accept != "" {
 		req.Header.Set("Accept", accept)
+	}
+	for key, value := range extraHeaders {
+		req.Header.Set(key, value)
 	}
 
 	// Add context
@@ -185,7 +201,20 @@ func FetchXml(
 	ctx context.Context,
 	target any,
 ) *errors.ErrorTrace {
-	data, tr := FetchBytes(url, httpMethod, auth, body, bodyType, "application/xml", ctx)
+	return FetchXmlWithHeaders(url, httpMethod, auth, body, bodyType, nil, ctx, target)
+}
+
+func FetchXmlWithHeaders(
+	url *types.Url,
+	httpMethod string,
+	auth types.AuthMethod,
+	body any,
+	bodyType string,
+	extraHeaders map[string]string,
+	ctx context.Context,
+	target any,
+) *errors.ErrorTrace {
+	data, tr := FetchBytesWithHeaders(url, httpMethod, auth, body, bodyType, "application/xml", extraHeaders, ctx)
 	if tr != nil {
 		return tr
 	}

@@ -7,6 +7,7 @@ import (
 	"luna-backend/errors"
 	"luna-backend/net"
 	"luna-backend/types"
+	"net/url"
 	"strings"
 )
 
@@ -24,9 +25,66 @@ type propfind struct {
 	Props []prop `xml:"prop>*"`
 }
 
-type propresult struct {
+type PropResult struct {
 	Found bool
 	Value string
+}
+
+type propresult = PropResult
+
+func NormalizeResourcePath(path string) string {
+	return normalizeResourcePath(path)
+}
+
+func normalizeResourcePath(path string) string {
+	path = strings.TrimSpace(path)
+	if parsed, err := url.Parse(path); err == nil && parsed.Path != "" {
+		path = parsed.Path
+	}
+	return strings.TrimSuffix(path, "/")
+}
+
+func propResultsFromPropstats(propstats []struct {
+	Props []struct {
+		Field struct {
+			XMLName xml.Name
+			Value   string `xml:",innerxml"`
+		} `xml:",any"`
+	} `xml:"prop"`
+	Status string `xml:"status"`
+}) map[string]propresult {
+	result := make(map[string]propresult)
+
+	for _, x := range propstats {
+		for _, y := range x.Props {
+			var res propresult
+
+			if strings.Contains(x.Status, "200 OK") {
+				res = propresult{
+					Found: true,
+					Value: y.Field.Value,
+				}
+			} else {
+				res = propresult{
+					Found: true,
+					Value: "",
+				}
+			}
+
+			result[y.Field.XMLName.Local] = res
+			result[fmt.Sprintf("%v:%v", y.Field.XMLName.Space, y.Field.XMLName.Local)] = res
+			switch y.Field.XMLName.Space {
+			case "urn:ietf:params:xml:ns:caldav":
+				result[fmt.Sprintf("C:%v", y.Field.XMLName.Local)] = res
+			case "DAV:":
+				result[fmt.Sprintf("D:%v", y.Field.XMLName.Local)] = res
+			case "http://apple.com/ns/ical/":
+				result[fmt.Sprintf("I:%v", y.Field.XMLName.Local)] = res
+			}
+		}
+	}
+
+	return result
 }
 
 func PropFind(baseUrl *types.Url, resourceUrl *types.Url, props []string, auth types.AuthMethod, ctx context.Context) (map[string]propresult, *errors.ErrorTrace) {
@@ -66,35 +124,61 @@ func PropFind(baseUrl *types.Url, resourceUrl *types.Url, props []string, auth t
 			Append(errors.LvlWordy, "Could not find props")
 	}
 
-	result := make(map[string]propresult)
+	return propResultsFromPropstats(res.Propstats), nil
+}
 
-	for _, x := range res.Propstats {
-		for _, y := range x.Props {
-			var res propresult
+// PropFindChildren fetches the requested props for a resource and its direct children in one request.
+func PropFindChildren(baseUrl *types.Url, resourceUrl *types.Url, props []string, auth types.AuthMethod, ctx context.Context) (map[string]map[string]propresult, *errors.ErrorTrace) {
+	xmlProps := make([]prop, len(props))
+	for i, prop := range props {
+		xmlProps[i].XMLName.Local = prop
+	}
 
-			if strings.Contains(x.Status, "200 OK") {
-				res = propresult{
-					Found: true,
-					Value: y.Field.Value,
-				}
-			} else {
-				res = propresult{
-					Found: true,
-					Value: "",
-				}
-			}
+	body := propfind{
+		C:     "urn:ietf:params:xml:ns:caldav",
+		D:     "DAV:",
+		I:     "http://apple.com/ns/ical/",
+		Props: xmlProps,
+	}
 
-			result[y.Field.XMLName.Local] = res
-			result[fmt.Sprintf("%v:%v", y.Field.XMLName.Space, y.Field.XMLName.Local)] = res
-			switch y.Field.XMLName.Space {
-			case "urn:ietf:params:xml:ns:caldav":
-				result[fmt.Sprintf("C:%v", y.Field.XMLName.Local)] = res
-			case "DAV:":
-				result[fmt.Sprintf("D:%v", y.Field.XMLName.Local)] = res
-			case "http://apple.com/ns/ical/":
-				result[fmt.Sprintf("I:%v", y.Field.XMLName.Local)] = res
-			}
-		}
+	fullUrl := *baseUrl
+	fullUrl.Path = resourceUrl.Path
+
+	res := struct {
+		XMLName   xml.Name `xml:"multistatus"`
+		Responses []struct {
+			Href      string `xml:"href"`
+			Propstats []struct {
+				Props []struct {
+					Field struct {
+						XMLName xml.Name
+						Value   string `xml:",innerxml"`
+					} `xml:",any"`
+				} `xml:"prop"`
+				Status string `xml:"status"`
+			} `xml:"propstat"`
+		} `xml:"response"`
+	}{}
+
+	tr := net.FetchXmlWithHeaders(
+		&fullUrl,
+		"PROPFIND",
+		auth,
+		body,
+		"application/xml",
+		map[string]string{"Depth": "1"},
+		ctx,
+		&res,
+	)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlWordy, "Could not find child props %v of %v at %v", strings.Join(props, ", "), resourceUrl.String(), baseUrl.String()).
+			Append(errors.LvlWordy, "Could not find child props")
+	}
+
+	result := make(map[string]map[string]propresult, len(res.Responses))
+	for _, response := range res.Responses {
+		result[normalizeResourcePath(response.Href)] = propResultsFromPropstats(response.Propstats)
 	}
 
 	return result, nil

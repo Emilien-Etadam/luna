@@ -107,9 +107,22 @@ func (source *CaldavSource) GetCalendars(q types.DatabaseQueries) ([]types.Calen
 			Append(errors.LvlBroad, "Could not get calendars")
 	}
 
+	colorsByPath, colorsTr := supplementary_caldav.PropFindChildren(
+		source.settings.Url,
+		source.settings.Url,
+		[]string{"I:calendar-color"},
+		source.auth,
+		q.GetContext(),
+	)
+
 	result := make([]types.Calendar, len(cals))
 	for i, calendar := range cals {
-		converted, err := source.calendarFromCaldav(calendar)
+		var prefetchedProps map[string]supplementary_caldav.PropResult
+		if colorsTr == nil {
+			prefetchedProps = colorsByPath[supplementary_caldav.NormalizeResourcePath(calendar.Path)]
+		}
+
+		converted, err := source.calendarFromCaldav(calendar, prefetchedProps)
 		if err != nil {
 			return nil, err.
 				Append(errors.LvlBroad, "Could not get calendars")
@@ -149,7 +162,7 @@ func (source *CaldavSource) GetCalendar(settings types.CalendarSettings, q types
 			Append(errors.LvlBroad, "Could not get calendar")
 	}
 
-	convertedCal, tr := source.calendarFromCaldav(cals[0])
+	convertedCal, tr := source.calendarFromCaldav(cals[0], nil)
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlBroad, "Could not get calendar")

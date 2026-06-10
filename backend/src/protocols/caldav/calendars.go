@@ -31,7 +31,24 @@ type CaldavCalendarSettings struct {
 	rawCalendar caldav.Calendar `json:"-"`
 }
 
-func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*CaldavCalendar, *errors.ErrorTrace) {
+func colorFromProps(props map[string]supplementary_caldav.PropResult) (*types.Color, *errors.ErrorTrace) {
+	colProp, exists := props["I:calendar-color"]
+	if !exists || !colProp.Found || colProp.Value == "" {
+		return nil, nil
+	}
+
+	color, err := types.ParseColor(colProp.Value)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not parse calendar color %v", colProp.Value).
+			Append(errors.LvlWordy, "Could not parse calendar")
+	}
+
+	return color, nil
+}
+
+func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar, prefetchedProps map[string]supplementary_caldav.PropResult) (*CaldavCalendar, *errors.ErrorTrace) {
 	url, err := types.NewUrl(rawCalendar.Path)
 	if err != nil {
 		return nil, errors.New().Status(http.StatusInternalServerError).
@@ -40,21 +57,24 @@ func (source *CaldavSource) calendarFromCaldav(rawCalendar caldav.Calendar) (*Ca
 			Append(errors.LvlWordy, "Could not parse calendar")
 	}
 
-	props, tr := supplementary_caldav.PropFind(source.settings.Url, url, []string{"I:calendar-color"}, source.auth, source.ctx)
-	if tr != nil {
-		return nil, tr.
-			Append(errors.LvlWordy, "Could not parse calendar")
-	}
-
-	var color *types.Color = nil
-	colProp, exists := props["I:calendar-color"]
-	if exists && colProp.Found {
-		color, err = types.ParseColor(colProp.Value)
-		if err != nil {
-			return nil, errors.New().Status(http.StatusInternalServerError).
-				AddErr(errors.LvlDebug, err).
-				Append(errors.LvlDebug, "Could not parse calendar color %v", colProp.Value).
+	var color *types.Color
+	if prefetchedProps != nil {
+		var tr *errors.ErrorTrace
+		color, tr = colorFromProps(prefetchedProps)
+		if tr != nil {
+			return nil, tr
+		}
+	} else {
+		props, tr := supplementary_caldav.PropFind(source.settings.Url, url, []string{"I:calendar-color"}, source.auth, source.ctx)
+		if tr != nil {
+			return nil, tr.
 				Append(errors.LvlWordy, "Could not parse calendar")
+		}
+
+		var parseTr *errors.ErrorTrace
+		color, parseTr = colorFromProps(props)
+		if parseTr != nil {
+			return nil, parseTr
 		}
 	}
 

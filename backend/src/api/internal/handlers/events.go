@@ -97,8 +97,8 @@ func GetEvents(c *gin.Context) {
 		}
 	}
 
-	// Save in the database and apply overrides
-	events, tr := u.Tx.Queries().OverrideEvents(expandedEvents[:count])
+	// Apply overrides without writing cache rows on read
+	events, tr := u.Tx.Queries().MergeEventOverridesReadOnly(expandedEvents[:count])
 	if tr != nil {
 		u.Error(tr)
 		return
@@ -145,11 +145,12 @@ func GetEvent(c *gin.Context) {
 		return
 	}
 
-	event, err := u.Tx.Queries().OverrideEvent(eventFromCal)
+	events, err := u.Tx.Queries().MergeEventOverridesReadOnly([]types.Event{eventFromCal})
 	if err != nil {
 		u.Error(err)
 		return
 	}
+	event := events[0]
 
 	// Convert to exposed format
 	convertedCal := exposedEvent{
