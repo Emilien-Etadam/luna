@@ -174,7 +174,7 @@
   })
 
   afterNavigate(() => {
-    refresh();
+    void refresh();
   });
 
   beforeNavigate((args) => {
@@ -184,34 +184,51 @@
   });
 
   let spooledRefresh: (ReturnType<typeof setTimeout> | undefined) = $state(undefined);
-  function refresh(force = false) {
+  let refreshRequestId = 0;
+  let manualRefreshInFlight = false;
+
+  function formatFetchError(err: unknown): string {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.startsWith("Failed to fetch events")) return message;
+    return `Failed to fetch events: ${message}`;
+  }
+
+  function refresh(force = false): Promise<void> {
     if (browser) syncTodayIfNeeded();
     const range = getVisibleRange(date, view);
+    const requestId = ++refreshRequestId;
 
-    getRepository().getAllEvents(range.start, range.end, force).catch((err) => {
-      queueNotification(ColorKeys.Danger, `Failed to fetch events: ${err.message}`);
-    });
+    const promise = getRepository().getAllEvents(range.start, range.end, force).catch((err) => {
+      if (requestId !== refreshRequestId) return;
+      queueNotification(ColorKeys.Danger, formatFetchError(err));
+    }).then(() => {});
 
     connectivity.check();
 
     if (!publicReadonly) {
       clearTimeout(spooledRefresh);
       spooledRefresh = setTimeout(() => {
-        refresh();
+        void refresh();
       }, autoRefreshInterval);
     }
+
+    return promise;
   }
 
   function forceRefresh() {
+    if (manualRefreshInFlight || isLoading) return;
+    manualRefreshInFlight = true;
     getRepository().invalidateCache();
-    refresh(true);
+    void refresh(true).finally(() => {
+      manualRefreshInFlight = false;
+    });
   }
 
   $effect(() => {
     ((date: Date, view: "month" | "week" | "day" | "agenda") => {
       untrack(() => {
         if (!browser) return;
-        refresh();
+        void refresh();
       });
     })(date, view);
   });

@@ -81,6 +81,16 @@ export class Repository {
   }
 
   private pendingMonths: Map<string, Set<number>> = new Map();
+  private inflightEventFetches = new Map<string, Promise<EventModel[]>>();
+  private inflightGetAllEvents: { key: string; promise: Promise<EventModel[]> } | null = null;
+
+  private eventFetchKey(calendar: string, startMonth: number, endMonth: number): string {
+    return `${calendar}:${startMonth}:${endMonth}`;
+  }
+
+  private getAllEventsKey(start: Date, end: Date, forceRefresh: boolean): string {
+    return `${start.toISOString()}:${end.toISOString()}:${forceRefresh}`;
+  }
 
   private getMonthFromDate(time: Date): number {
     return time.getFullYear() * 100 + time.getMonth() + 1;
@@ -824,14 +834,29 @@ export class Repository {
   async getAllEvents(start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
     if (!browser) return [];
 
+    const key = this.getAllEventsKey(start, end, forceRefresh);
+    if (this.inflightGetAllEvents?.key === key) {
+      return this.inflightGetAllEvents.promise;
+    }
+
+    const promise = this.fetchAllEvents(start, end, forceRefresh);
+    this.inflightGetAllEvents = { key, promise };
+    try {
+      return await promise;
+    } finally {
+      if (this.inflightGetAllEvents?.promise === promise) {
+        this.inflightGetAllEvents = null;
+      }
+    }
+  }
+
+  private async fetchAllEvents(start: Date, end: Date, forceRefresh = false): Promise<EventModel[]> {
     this.eventsRangeStart = this.getMonthFromDate(start);
     this.eventsRangeEnd = this.getMonthFromDate(end);
 
     this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
     const allSources = await this.getSources(forceRefresh).catch((err) => { throw err; });
-    const [events, errors] = await parallel(allSources.map((source) => this.getEventsFromSource(source.id, this.previousMonth(this.eventsRangeStart), this.nextMonth(this.eventsRangeEnd), forceRefresh))).catch((err) => {
-      throw new Error(`Failed to fetch events: ${(err.cause || err).message}`, { cause: err.cause || err });
-    });
+    const [events, errors] = await parallel(allSources.map((source) => this.getEventsFromSource(source.id, this.previousMonth(this.eventsRangeStart), this.nextMonth(this.eventsRangeEnd), forceRefresh)));
     errors.forEach((err) => {
       queueNotification(
         ColorKeys.Danger,
@@ -863,9 +888,7 @@ export class Repository {
   private async getEventsFromSource(source: string, startMonth: number, endMonth: number, forceRefresh = false): Promise<EventModel[]> {
     let cals = await this.getCalendars(source, forceRefresh).catch((err) => { throw err; });
     cals = cals.filter(x => !this.metadata.hiddenCalendars.has(x.id)); // only fetch events from visible calendars
-    const [events, errors] = await parallel(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, startMonth, endMonth, forceRefresh))).catch((err) => {
-      throw new Error(`Failed to fetch events: ${(err.cause || err).message}`, { cause: err.cause || err });
-    })
+    const [events, errors] = await parallel(cals.map((calendar) => this.getEventsFromCalendar(calendar.id, startMonth, endMonth, forceRefresh)));
     errors.forEach((err) => {
       queueNotification(
         ColorKeys.Danger,
@@ -876,6 +899,22 @@ export class Repository {
   }
 
   private async getEventsFromCalendar(calendar: string, startMonth: number, endMonth: number, forceRefresh = false): Promise<EventModel[]> {
+    const key = this.eventFetchKey(calendar, startMonth, endMonth);
+    const inflight = this.inflightEventFetches.get(key);
+    if (inflight) return inflight;
+
+    const promise = this.fetchEventsFromCalendar(calendar, startMonth, endMonth, forceRefresh);
+    this.inflightEventFetches.set(key, promise);
+    try {
+      return await promise;
+    } finally {
+      if (this.inflightEventFetches.get(key) === promise) {
+        this.inflightEventFetches.delete(key);
+      }
+    }
+  }
+
+  private async fetchEventsFromCalendar(calendar: string, startMonth: number, endMonth: number, forceRefresh = false): Promise<EventModel[]> {
     let result: EventModel[] = [];
 
     const cache = (forceRefresh ? null : this.eventsCache.get(calendar)) || new Map<number, CacheEntry<string[]>>();
