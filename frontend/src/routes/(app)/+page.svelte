@@ -24,7 +24,7 @@
   import { getConnectivity, Reachability } from "$lib/client/data/connectivity.svelte";
   import Button from "../../components/interactive/Button.svelte";
   import DayViewModal from "../../components/modals/DayViewModal.svelte";
-  import { getDayIndex, isInRange } from "../../lib/common/date";
+  import { getDayIndex, getLocalDayKey, getMsUntilNextMidnight, isInRange, isSameDay } from "../../lib/common/date";
   import { compareEventsByStartDate } from "../../lib/common/comparators";
   import { GetEventColor } from "$lib/common/colors";
   import SourceWizardModal from "../../components/modals/SourceWizardModal.svelte";
@@ -107,6 +107,34 @@
     date = new Date(today);
   }
 
+  function syncTodayIfNeeded() {
+    const now = new Date();
+    if (isSameDay(today, now)) return;
+
+    const wasShowingToday = isSameDay(date, today);
+    today = now;
+    if (wasShowingToday) {
+      date = new Date(today);
+    }
+  }
+
+  let dayChangeTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  function scheduleDayChangeCheck() {
+    if (!browser) return;
+    clearTimeout(dayChangeTimeout);
+    dayChangeTimeout = setTimeout(() => {
+      syncTodayIfNeeded();
+      scheduleDayChangeCheck();
+    }, getMsUntilNextMidnight());
+  }
+
+  function handleVisibilityChange() {
+    if (document.visibilityState === "visible") {
+      syncTodayIfNeeded();
+    }
+  }
+
   function smallCalendarClick(clickedDate: Date) {
     const range = getVisibleRange(date, view);
     if (isInRange(clickedDate, range.start, range.end) && clickedDate.getMonth() === date.getMonth()) {
@@ -138,6 +166,7 @@
 
   let spooledRefresh: (ReturnType<typeof setTimeout> | undefined) = $state(undefined);
   function refresh(force = false) {
+    if (browser) syncTodayIfNeeded();
     const range = getVisibleRange(date, view);
 
     getRepository().getAllEvents(range.start, range.end, force).catch((err) => {
@@ -171,6 +200,12 @@
   onMount(() => {
     if (!browser) return;
     getRepository().getSources().catch(NoOp);
+    scheduleDayChangeCheck();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      clearTimeout(dayChangeTimeout);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   });
 
   /* Single instance modal logic */
@@ -258,7 +293,7 @@
     const byDay = new Map<string, { date: Date, events: EventModel[] }>();
 
     if (isCurrentMonthShown) {
-      const key = localDayKey(todayMidnight);
+      const key = getLocalDayKey(todayMidnight);
       byDay.set(key, { date: new Date(todayMidnight), events: [] });
     }
 
@@ -266,7 +301,7 @@
       const day = new Date(event.date.start);
       day.setHours(0, 0, 0, 0);
       if (day.getTime() < cutoff.getTime()) day.setTime(cutoff.getTime());
-      const key = localDayKey(day);
+      const key = getLocalDayKey(day);
       if (!byDay.has(key)) byDay.set(key, { date: day, events: [] });
       byDay.get(key)?.events.push(event);
     }
@@ -275,13 +310,7 @@
   });
 
   const calendarGranularity = $derived(view === "agenda" ? "month" : view);
-  function localDayKey(d: Date): string {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  }
-  const todayKey = $derived(localDayKey(today));
+  const todayKey = $derived(getLocalDayKey(today));
   let agendaContainer: HTMLElement | null = $state(null);
 
   $effect(() => {
@@ -686,7 +715,7 @@
     <button class="activityIcon" class:active={view === "day"} onclick={() => view = "day"} title="Jour">
       <CalendarSingle size={16}/>
     </button>
-    <button class="activityIcon" class:active={view === "agenda"} onclick={() => { date = new Date(); view = "agenda"; }} title="Agenda">
+    <button class="activityIcon" class:active={view === "agenda"} onclick={() => { syncTodayIfNeeded(); date = new Date(); view = "agenda"; }} title="Agenda">
       <List size={16}/>
     </button>
   </nav>
@@ -770,7 +799,7 @@
         {#each agendaDays as day (day.date.getTime())}
           <div
             class="agendaDay"
-            data-agenda-today={localDayKey(day.date) === todayKey ? "true" : "false"}
+            data-agenda-today={getLocalDayKey(day.date) === todayKey ? "true" : "false"}
           >
             <h3 class="agendaDate">{day.date.toLocaleDateString([], { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}</h3>
             {#each day.events as event (event.id + event.date.start.getTime())}
