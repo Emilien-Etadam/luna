@@ -320,8 +320,9 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 	event.Props.SetDateTime(ical.PropDateTimeStamp, timestamp)
 	//event.Props.SetDateTime(util.PropTimestamp, timestamp)
 
-	cal.Props.SetText(ical.PropProductID, "Luna")
-	cal.Props.SetText(ical.PropVersion, "0.1.0") // TODO: access version from CommonConfig
+	cal.Props.SetText(ical.PropProductID, "Luna 0.1.0") // TODO: take version from common config
+
+	cal.Props.SetText(ical.PropVersion, "2.0") // iCalendar version
 
 	return nil
 }
