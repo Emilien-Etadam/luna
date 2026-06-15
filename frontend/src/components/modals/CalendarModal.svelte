@@ -56,7 +56,7 @@
     calendar = await deepCopy(original);
     originalCalendar = await deepCopy(original);
 
-    setTimeout(showModalInternal(), 0);
+    setTimeout(showModalInternal, 0);
 
     return new Promise((resolve, reject) => {
       promiseResolve = resolve;
@@ -80,7 +80,6 @@
     await getRepository().deleteCalendar(calendar.id).catch(err => {
       throw new Error(`Could not delete calendar ${calendar.name}: ${err.message}`);
     });
-    promiseReject();
   };
   const onEdit = async () => {
     if (calendar.id === "") {
