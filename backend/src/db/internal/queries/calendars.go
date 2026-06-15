@@ -15,7 +15,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (q *Queries) insertCalendars(cals []types.Calendar) *errors.ErrorTrace {
+func (q *Queries) insertCalendars(cals []types.Calendar, deleteUnknown bool) *errors.ErrorTrace {
 	if len(cals) == 0 {
 		return nil
 	}
@@ -40,7 +40,7 @@ func (q *Queries) insertCalendars(cals []types.Calendar) *errors.ErrorTrace {
 		[]string{"id", "source", "settings"},
 		[]string{"settings"},
 		rows,
-		true,
+		deleteUnknown,
 		"original.source = $1",
 		cals[0].GetSource().GetId(),
 		true,
@@ -164,7 +164,7 @@ func (q *Queries) orderCalendars(cals []types.Calendar) ([]types.Calendar, *erro
 	return orderedCalendars, nil
 }
 
-func (q *Queries) OverrideCalendars(cals []types.Calendar) ([]types.Calendar, *errors.ErrorTrace) {
+func (q *Queries) overrideCalendars(cals []types.Calendar, deleteUnknown bool) ([]types.Calendar, *errors.ErrorTrace) {
 	if len(cals) == 0 {
 		return cals, nil
 	}
@@ -199,7 +199,7 @@ func (q *Queries) OverrideCalendars(cals []types.Calendar) ([]types.Calendar, *e
 		}
 	}
 
-	err = q.insertCalendars(cals)
+	err = q.insertCalendars(cals, deleteUnknown)
 	if err != nil {
 		return nil, err.
 			Append(errors.LvlWordy, "Could not cache events").
@@ -214,6 +214,16 @@ func (q *Queries) OverrideCalendars(cals []types.Calendar) ([]types.Calendar, *e
 	}
 
 	return cals, nil
+}
+
+// OverrideCalendars upserts calendars and removes stale entries from the same source.
+func (q *Queries) OverrideCalendars(cals []types.Calendar) ([]types.Calendar, *errors.ErrorTrace) {
+	return q.overrideCalendars(cals, true)
+}
+
+// EnsureCalendars upserts calendars without removing other calendars from the same source.
+func (q *Queries) EnsureCalendars(cals []types.Calendar) ([]types.Calendar, *errors.ErrorTrace) {
+	return q.overrideCalendars(cals, false)
 }
 
 // MergeCalendarsOverridesReadOnly applies title/description/color overrides without writing cache rows (read-only tx).
