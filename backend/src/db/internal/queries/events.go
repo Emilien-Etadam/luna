@@ -248,6 +248,135 @@ func (q *Queries) GetEvent(userId types.ID, eventId types.ID, ctx context.Contex
 	return event, nil
 }
 
+// GetEventOrResolve returns a cached event or discovers it from upstream calendars when missing locally.
+func (q *Queries) GetEventOrResolve(userId types.ID, eventId types.ID, ctx context.Context, config *config.CommonConfig) (types.Event, *errors.ErrorTrace) {
+	event, tr := q.GetEvent(userId, eventId, ctx, config)
+	if tr == nil {
+		return event, nil
+	}
+	if tr.GetStatus() != http.StatusNotFound {
+		return nil, tr
+	}
+	return q.resolveRemoteEvent(userId, eventId, ctx, config)
+}
+
+func (q *Queries) resolveRemoteEvent(userId types.ID, eventId types.ID, ctx context.Context, config *config.CommonConfig) (types.Event, *errors.ErrorTrace) {
+	calendars, tr := q.getUserCalendarsForResolve(userId, ctx, config)
+	if tr != nil {
+		return nil, tr
+	}
+
+	start := time.Now().AddDate(-50, 0, 0)
+	end := time.Now().AddDate(50, 0, 0)
+
+	for _, calendar := range calendars {
+		eventsFromCal, tr := calendar.GetEvents(start, end, q)
+		if tr != nil {
+			q.Logger.Warn(tr.Serialize(errors.LvlDebug))
+			continue
+		}
+
+		for _, event := range eventsFromCal {
+			expanded, tr := types.ExpandRecurrence(event, &start, &end)
+			if tr != nil {
+				q.Logger.Warn(tr.Serialize(errors.LvlDebug))
+				continue
+			}
+
+			for _, candidate := range expanded {
+				if candidate.GetId() != eventId {
+					continue
+				}
+
+				_, tr = q.OverrideCalendars([]types.Calendar{candidate.GetCalendar()})
+				if tr != nil {
+					return nil, tr.
+						Append(errors.LvlWordy, "Could not cache calendar for resolved event").
+						Append(errors.LvlBroad, "Could not get event")
+				}
+
+				cached, tr := q.OverrideEvents([]types.Event{candidate})
+				if tr != nil {
+					return nil, tr.
+						Append(errors.LvlWordy, "Could not cache resolved event").
+						Append(errors.LvlBroad, "Could not get event")
+				}
+
+				return cached[0], nil
+			}
+		}
+	}
+
+	return nil, errors.New().Status(http.StatusNotFound).
+		Append(errors.LvlDebug, "Event %v for user %v not found upstream", eventId, userId).
+		AltStr(errors.LvlPlain, "Event not found").
+		AltStr(errors.LvlBroad, "Could not get event")
+}
+
+func (q *Queries) getUserCalendarsForResolve(userId types.ID, ctx context.Context, config *config.CommonConfig) ([]types.Calendar, *errors.ErrorTrace) {
+	rows, err := q.Tx.Query(
+		q.Context,
+		`
+		SELECT calendars.id
+		FROM calendars
+		JOIN sources ON calendars.source = sources.id
+		WHERE sources.userid = $1;
+		`,
+		userId.UUID(),
+	)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlWordy, "Could not list calendars for event resolution")
+	}
+	defer rows.Close()
+
+	calendars := []types.Calendar{}
+	for rows.Next() {
+		var calendarId uuid.UUID
+		if err := rows.Scan(&calendarId); err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlWordy, "Could not scan calendar id for event resolution")
+		}
+
+		calendar, tr := q.GetCalendar(userId, types.IdFromUuid(calendarId), ctx, config)
+		if tr != nil {
+			q.Logger.Warn(tr.Serialize(errors.LvlDebug))
+			continue
+		}
+		calendars = append(calendars, calendar)
+	}
+
+	if len(calendars) > 0 {
+		return calendars, nil
+	}
+
+	sources, tr := q.GetSourcesByUser(userId, ctx, config)
+	if tr != nil {
+		return nil, tr.
+			Append(errors.LvlWordy, "Could not list sources for event resolution")
+	}
+
+	for _, source := range sources {
+		calsFromSource, tr := source.GetCalendars(q)
+		if tr != nil {
+			q.Logger.Warn(tr.Serialize(errors.LvlDebug))
+			continue
+		}
+
+		cals, tr := q.OverrideCalendars(calsFromSource)
+		if tr != nil {
+			q.Logger.Warn(tr.Serialize(errors.LvlDebug))
+			continue
+		}
+
+		calendars = append(calendars, cals...)
+	}
+
+	return calendars, nil
+}
+
 func (q *Queries) InsertEvent(event types.Event) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
