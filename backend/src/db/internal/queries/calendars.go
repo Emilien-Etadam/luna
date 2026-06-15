@@ -126,16 +126,16 @@ func (q *Queries) orderCalendars(cals []types.Calendar) ([]types.Calendar, *erro
 	}
 	defer rows.Close()
 
-	orderedIds := make([]types.ID, len(cals))
-	i := 0
+	orderedIds := []types.ID{}
 	for rows.Next() {
-		err := rows.Scan(&orderedIds[i])
+		var id types.ID
+		err := rows.Scan(&id)
 		if err != nil {
 			return nil, errors.New().Status(http.StatusInternalServerError).
 				AddErr(errors.LvlDebug, err).
 				Append(errors.LvlWordy, "Could not scan ordered calendar ID")
 		}
-		i += 1
+		orderedIds = append(orderedIds, id)
 	}
 
 	calMap := map[types.ID]types.Calendar{}
@@ -143,15 +143,22 @@ func (q *Queries) orderCalendars(cals []types.Calendar) ([]types.Calendar, *erro
 		calMap[cal.GetId()] = cal
 	}
 
-	orderedCalendars := make([]types.Calendar, len(cals))
-	for i, id := range orderedIds {
+	seen := map[types.ID]bool{}
+	orderedCalendars := make([]types.Calendar, 0, len(cals))
+	for _, id := range orderedIds {
 		cal, exists := calMap[id]
 		if !exists {
-			return nil, errors.New().Status(http.StatusInternalServerError).
-				AddErr(errors.LvlDebug, err).
-				Append(errors.LvlWordy, "Could not retrieve mapped calendar")
+			continue
 		}
-		orderedCalendars[i] = cal
+		orderedCalendars = append(orderedCalendars, cal)
+		seen[id] = true
+	}
+
+	// Calendars discovered remotely but not cached yet keep their input order.
+	for _, cal := range cals {
+		if !seen[cal.GetId()] {
+			orderedCalendars = append(orderedCalendars, cal)
+		}
 	}
 
 	return orderedCalendars, nil
