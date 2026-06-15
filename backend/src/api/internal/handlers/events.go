@@ -43,6 +43,13 @@ func GetEvents(c *gin.Context) {
 		return
 	}
 
+	// Cache the calendar locally so event edits/deletes can resolve it later.
+	_, tr = u.Tx.Queries().OverrideCalendars([]types.Calendar{calendar})
+	if tr != nil {
+		u.Error(tr)
+		return
+	}
+
 	// Get the associated events
 	startStr := c.Query("start")
 	startTime, err := time.Parse(time.RFC3339, startStr)
@@ -97,8 +104,8 @@ func GetEvents(c *gin.Context) {
 		}
 	}
 
-	// Apply overrides without writing cache rows on read
-	events, tr := u.Tx.Queries().MergeEventOverridesReadOnly(expandedEvents[:count])
+	// Apply overrides and cache events locally for later edits/deletes.
+	events, tr := u.Tx.Queries().OverrideEvents(expandedEvents[:count])
 	if tr != nil {
 		u.Error(tr)
 		return
