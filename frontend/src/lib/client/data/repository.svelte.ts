@@ -312,26 +312,46 @@ export class Repository {
     }
     return Array.from(byKey.values());
   }
-  private compileEvents(startMonth: number, endMonth: number) {
+
+  private buildVisibleEvents(startMonth: number, endMonth: number): EventModel[] {
+    const visibleEvents = [ ...new Map(
+      Array.from(this.eventsCache.entries())
+      .filter(x => !this.metadata.hiddenCalendars.has(x[0]) && x[1] != null) // Event must be visible
+      .map(x => Array.from(x[1].entries()))
+      .flat()
+      .filter(x => x[1] != null && x[0] >= startMonth && x[0] <= endMonth) // Event must be in the time frame
+      .map(x => x[1].value)
+      .filter(x => x != null) // Event must exist
+      .flat()
+      .map(x => this.eventsMap.get(x))
+      .filter(x => x != null) // Event must exist
+      .map(x => [x.id, x])
+    ).values()];
+    return this.isPublicReadOnly()
+      ? this.mergeDuplicateEvents(visibleEvents)
+      : visibleEvents;
+  }
+
+  private applyEventsDisplay(visibleEvents: EventModel[]) {
+    if (
+      this.events.length === visibleEvents.length &&
+      this.events.every((event, index) => event.id === visibleEvents[index].id)
+    ) {
+      return;
+    }
+    this.events.splice(0, this.events.length, ...visibleEvents);
+  }
+
+  private compileEvents(startMonth: number, endMonth: number, immediate = false) {
     clearTimeout(this.compileEventsTimeout);
-    this.compileEventsTimeout = setTimeout(async () => {
-      const visibleEvents = [ ...new Map(
-        Array.from(this.eventsCache.entries())
-        .filter(x => !this.metadata.hiddenCalendars.has(x[0]) && x[1] != null) // Event must be visible
-        .map(x => Array.from(x[1].entries()))
-        .flat()
-        .filter(x => x[1] != null && x[0] >= startMonth && x[0] <= endMonth) // Event must be in the time frame
-        .map(x => x[1].value)
-        .filter(x => x != null) // Event must exist
-        .flat()
-        .map(x => this.eventsMap.get(x))
-        .filter(x => x != null) // Event must exist
-        .map(x => [x.id, x])
-      ).values()];
-      this.events = this.isPublicReadOnly()
-        ? this.mergeDuplicateEvents(visibleEvents)
-        : visibleEvents;
-    }, this.spoolerDelay)
+    const run = () => {
+      this.applyEventsDisplay(this.buildVisibleEvents(startMonth, endMonth));
+    };
+    if (immediate) {
+      run();
+      return;
+    }
+    this.compileEventsTimeout = setTimeout(run, this.spoolerDelay);
   }
   public async recalculateEvents(calendarThatBecameVisible: (string | null) = null) {
     if (calendarThatBecameVisible != null) {
@@ -762,7 +782,7 @@ export class Repository {
 
     // remove from display
     this.compileCalendars();
-    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd, true);
 
     this.saveCache();
   }
@@ -1095,7 +1115,7 @@ export class Repository {
     if (this.getMonthFromDate(modifiedEvent.date.start) <= this.eventsRangeEnd && this.getMonthFromDate(modifiedEvent.date.end) >= this.eventsRangeStart) {
       //this.events.update((events) => events.map((event) => event.id === modifiedEvent.id ? modifiedEvent : event));
     } else {
-      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd, true);
     }
 
     this.saveCache();
@@ -1129,7 +1149,7 @@ export class Repository {
     for (const month of months) this.removeEventFromCache(event, month);
 
     // remove from display
-    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd, true);
 
     this.saveCache();
   }

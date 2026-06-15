@@ -156,7 +156,6 @@
     await getRepository().deleteEvent(event.id).catch(err => {
       throw new Error(`Could not delete event ${event.name}: ${err.message}`);
     });
-    promiseReject();
   };
   const onEdit = async () => {
     if (event.date.allDay) {

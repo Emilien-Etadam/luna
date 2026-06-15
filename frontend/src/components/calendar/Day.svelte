@@ -249,7 +249,7 @@
   compromise -->
   <!-- {#each events as event, i ((event?.id || 0) + i.toString())} -->
 
-  {#each events as event, i ((event?.id || i).toString() + date.getTime())}
+  {#each events as event, i (event ? `${event.id}@${date.getTime()}` : `pad-${i}@${date.getTime()}`)}
     <!-- TODO: make parameters match css, look into cubic easing, invert fly direction when going back in range -->
     <!--<div
       class="eventAnimation"
