@@ -146,7 +146,7 @@ func GetEvent(c *gin.Context) {
 	}
 
 	// Get event
-	eventFromCal, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
+	eventFromCal, err := u.Tx.Queries().GetEventOrResolve(userId, eventId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -271,7 +271,7 @@ func PatchEvent(c *gin.Context) {
 		return
 	}
 
-	event, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
+	event, err := u.Tx.Queries().GetEventOrResolve(userId, eventId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -363,7 +363,7 @@ func DeleteEvent(c *gin.Context) {
 	}
 
 	// Get event first
-	event, err := u.Tx.Queries().GetEvent(userId, eventId, u.Context, u.Config)
+	event, err := u.Tx.Queries().GetEventOrResolve(userId, eventId, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
