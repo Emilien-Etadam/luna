@@ -2,6 +2,10 @@ import { tick } from "svelte";
 import { effectiveBackgroundColor as getEffectiveBackground } from "../common/misc";
 
 export const draggable = (node: HTMLElement, data: { ownClass: string, childClasses: string[], groupSelector?: string, callback: (newIndex: number) => Promise<any> }) => {
+  const isInteractiveTarget = (target: EventTarget | null) => {
+    if (!(target instanceof Element)) return false;
+    return target.closest("button, a, input, select, textarea, label, [role='button'], [data-no-drag]") != null;
+  };
   let down = false;
   let moved = false;
 
@@ -35,8 +39,9 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
     if (down) mouseUp();
   }
 
-  const mouseDown = () => {
+  const mouseDown = (event: MouseEvent) => {
     if (down) return;
+    if (isInteractiveTarget(event.target)) return;
     addDragEventListeners();
     moved = false;
     down = true;

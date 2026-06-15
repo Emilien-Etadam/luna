@@ -5,7 +5,6 @@
   import VisibilityToggle from "../interactive/VisibilityToggle.svelte";
 
   import { GetCalendarColor } from "$lib/common/colors";
-  import { NoOp } from "$lib/client/placeholders";
   import { focusIndicator } from "$lib/client/decoration";
   import { getMetadata } from "$lib/client/data/metadata.svelte";
   import { draggable } from "$lib/client/reordering.svelte";
@@ -31,7 +30,9 @@
 
   let showModal: ((calendar: CalendarModel) => Promise<CalendarModel>) = getContext("showCalendarModal");
   function showModalInternal() {
-    showModal(calendar).then(newCalendar => calendar = newCalendar).catch(NoOp);
+    void showModal(calendar).then((newCalendar) => {
+      calendar = newCalendar;
+    }).catch(() => {});
   }
 
   $effect(() => {
