@@ -1,7 +1,7 @@
 import { tick } from "svelte";
 import { effectiveBackgroundColor as getEffectiveBackground } from "../common/misc";
 
-export const draggable = (node: HTMLElement, data: { ownClass: string, childClasses: string[], callback: (newIndex: number) => Promise<any> }) => {
+export const draggable = (node: HTMLElement, data: { ownClass: string, childClasses: string[], groupSelector?: string, callback: (newIndex: number) => Promise<any> }) => {
   let down = false;
   let moved = false;
 
@@ -167,7 +167,10 @@ export const draggable = (node: HTMLElement, data: { ownClass: string, childClas
     } else {
       moved = true;
 
-      parent = node.parentElement;
+      parent = data.groupSelector
+        ? (node.closest(data.groupSelector) as HTMLElement | null)
+        : node.parentElement;
+      if (!parent) return;
 
       // Find elements in own "ordering group" and add order property to every element in the container
       similarElements = [];
