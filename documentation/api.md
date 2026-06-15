@@ -345,7 +345,7 @@ The description field is optional. Either the end date or the event duration is 
 - **Path**: ``/api/url``
 - **Method**: ``POST``
 - **Body**: `url`, `auth_type`
-- **Purpose**: Tries to determine if the supplied URL links to an iCal file or a CalDAV server. In case of a CalDAV server, it also returns the principal's base URL.
+- **Purpose**: Tries to determine if the supplied URL links to an iCal file or a CalDAV server. In case of a CalDAV server, it also returns the discovered calendar-home URL when available.
 
 Depending on the `auth_type` field, additional information may need to be passed:
 - `none`: No additional information
