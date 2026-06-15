@@ -304,7 +304,7 @@ func (q *Queries) resolveRemoteEvent(userId types.ID, eventId types.ID, hint *ty
 					continue
 				}
 
-				_, tr = q.OverrideCalendars([]types.Calendar{candidate.GetCalendar()})
+				_, tr = q.EnsureCalendars([]types.Calendar{candidate.GetCalendar()})
 				if tr != nil {
 					return nil, tr.
 						Append(errors.LvlWordy, "Could not cache calendar for resolved event").
@@ -420,7 +420,7 @@ func (q *Queries) resolveCalendarById(userId types.ID, calendarId types.ID, ctx 
 				continue
 			}
 
-			cached, tr := q.OverrideCalendars([]types.Calendar{cal})
+			cached, tr := q.EnsureCalendars([]types.Calendar{cal})
 			if tr != nil {
 				return nil, tr.
 					Append(errors.LvlWordy, "Could not cache calendar for event resolution").
