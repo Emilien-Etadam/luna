@@ -112,7 +112,7 @@ func checkUrlWithAuth(u *util.HandlerUtility, url *types.Url, auth types.AuthMet
 		}, nil
 	}
 
-	isCaldav, tr, principalUrl := isUrlCaldav(u, url, auth)
+	isCaldav, tr, caldavUrl := isUrlCaldav(u, url, auth)
 	if tr != nil {
 		if strings.Contains(tr.Serialize(errors.LvlDebug), "401 Unauthorized") {
 			statusCode = http.StatusUnauthorized
@@ -130,7 +130,7 @@ func checkUrlWithAuth(u *util.HandlerUtility, url *types.Url, auth types.AuthMet
 	if isCaldav {
 		return &gin.H{
 			"type": constants.SourceCaldav,
-			"url":  principalUrl,
+			"url":  caldavUrl,
 			"auth": auth.GetType(),
 		}, nil
 	}
@@ -181,16 +181,41 @@ func isUrlCaldav(u *util.HandlerUtility, url *types.Url, auth types.AuthMethod) 
 			Append(errors.LvlWordy, "Could not create CalDAV client"), ""
 	}
 
-	principalUrl, err := client.FindCurrentUserPrincipal(u.Context)
+	principalPath, err := client.FindCurrentUserPrincipal(u.Context)
 	if err != nil {
 		return false, errors.New().Status(http.StatusInternalServerError).
 			AddErr(errors.LvlDebug, err).
 			Append(errors.LvlWordy, "Could not get current user principal"), ""
 	}
 
-	if principalUrl == "" || strings.HasPrefix(principalUrl, "/") {
-		principalUrl = url.URL().Scheme + "://" + url.URL().Host + principalUrl
+	caldavUrl := resolveCaldavResourceUrl(url, principalPath)
+
+	homeSetPath, err := client.FindCalendarHomeSet(u.Context, principalPath)
+	if err == nil && homeSetPath != "" {
+		caldavUrl = resolveCaldavResourceUrl(url, homeSetPath)
+	} else if strings.Contains(url.URL().Path, "/calendars/") {
+		caldavUrl = url.String()
 	}
 
-	return true, nil, principalUrl
+	return true, nil, caldavUrl
+}
+
+// resolveCaldavResourceUrl turns a relative DAV href into an absolute URL using the supplied base.
+func resolveCaldavResourceUrl(base *types.Url, href string) string {
+	if href == "" {
+		return base.String()
+	}
+	if strings.HasPrefix(href, "http://") || strings.HasPrefix(href, "https://") {
+		return href
+	}
+
+	resolved := *base.URL()
+	if strings.HasPrefix(href, "/") {
+		resolved.Path = href
+	} else {
+		resolved = *resolved.JoinPath(href)
+	}
+	resolved.RawQuery = ""
+	resolved.Fragment = ""
+	return resolved.String()
 }

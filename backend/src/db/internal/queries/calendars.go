@@ -331,10 +331,13 @@ func (q *Queries) InsertCalendar(calendar types.Calendar) *errors.ErrorTrace {
 	_, err := q.Tx.Exec(
 		q.Context,
 		`
-		INSERT INTO calendars (id, source, settings)
-		SELECT $1, $2, $3, COALESCE(MAX(display_order) + 1, 0)
-		FROM calendars
-		WHERE source = $2;
+		INSERT INTO calendars (id, source, settings, display_order)
+		VALUES (
+			$1,
+			$2,
+			$3,
+			COALESCE((SELECT MAX(display_order) + 1 FROM calendars WHERE source = $2), 0)
+		);
 		`,
 		calendar.GetId().UUID(),
 		calendar.GetSource().GetId().UUID(),
