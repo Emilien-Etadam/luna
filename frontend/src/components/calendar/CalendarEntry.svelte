@@ -45,6 +45,13 @@
 
   async function reorderCalendar(newIndex: number) {
     if (readOnly) return;
+
+    const calendarsForSource = repository.calendars.filter((cal) => cal.source === calendar.source);
+    const previousIndex = calendarsForSource.findIndex((cal) => cal.id === calendar.id);
+    if (previousIndex === -1) return;
+    if (newIndex < 0 || newIndex >= calendarsForSource.length) return;
+    if (previousIndex === newIndex) return;
+
     await repository.changeCalendarDisplayOrder(calendar, newIndex).catch((err) => {
       queueNotification(ColorKeys.Danger, err);
     });
@@ -136,7 +143,7 @@
     </span>
   </div>
 {:else}
-  <div class="calendarEntry" use:draggable={{ ownClass: "calendarEntry", childClasses: [], callback: reorderCalendar}}>
+  <div class="calendarEntry" use:draggable={{ ownClass: "calendarEntry", childClasses: [], groupSelector: ".calendarGroup", callback: reorderCalendar}}>
     <span class="name">
       <ColorCircle
         color={GetCalendarColor(calendar)}

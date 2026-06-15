@@ -532,6 +532,10 @@
     padding: dimensions.$gapTiny 0;
   }
 
+  div.sources :global(.calendarGroup) {
+    display: contents;
+  }
+
   div.toprow {
     display: flex;
     flex-direction: row;
@@ -920,8 +924,10 @@
 {/snippet}
 
 {#snippet calendarEntries(calendars: CalendarModel[])}
-  {#each calendars as cal (cal.id)}
-    {@const index = repository.calendars.findIndex((calendar) => calendar.id === cal.id)}
-    <CalendarEntry bind:calendar={repository.calendars[index]} readOnly={publicReadonly}/>
-  {/each}
+  <div class="calendarGroup">
+    {#each calendars as cal (cal.id)}
+      {@const index = repository.calendars.findIndex((calendar) => calendar.id === cal.id)}
+      <CalendarEntry bind:calendar={repository.calendars[index]} readOnly={publicReadonly}/>
+    {/each}
+  </div>
 {/snippet}
