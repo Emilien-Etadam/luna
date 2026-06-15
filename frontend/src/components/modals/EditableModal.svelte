@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
+  import { tick } from "svelte";
 
   import Loader from "../decoration/Loader.svelte";
   import Button from "../interactive/Button.svelte";
@@ -108,7 +109,8 @@
   }
 
   const confirmDelete = async () => {
-    await onDelete().then(() => {
+    await onDelete().then(async () => {
+      await tick();
       queueNotification(ColorKeys.Success, "Deleted successfully")
       hideModal();
     }).catch((err) => {
