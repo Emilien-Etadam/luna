@@ -23,6 +23,46 @@ type exposedEvent struct {
 	CanDelete  bool             `json:"can_delete"`
 }
 
+func parseEventResolveHint(c *gin.Context) (*types.EventResolveHint, *errors.ErrorTrace) {
+	calendarRaw := c.Query("calendar")
+	if calendarRaw == "" {
+		return nil, nil
+	}
+
+	calendarId, err := types.IdFromString(calendarRaw)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusBadRequest).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlPlain, "Malformed calendar id")
+	}
+
+	hint := &types.EventResolveHint{
+		CalendarId: calendarId,
+	}
+
+	startRaw := c.Query("start")
+	endRaw := c.Query("end")
+	if startRaw != "" && endRaw != "" {
+		start, err := time.Parse(time.RFC3339, startRaw)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Malformed start time")
+		}
+		end, err := time.Parse(time.RFC3339, endRaw)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusBadRequest).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlPlain, "Malformed end time")
+		}
+		hint.Start = start
+		hint.End = end
+		hint.HasRange = true
+	}
+
+	return hint, nil
+}
+
 func GetEvents(c *gin.Context) {
 	u := util.GetUtil(c)
 
@@ -146,7 +186,13 @@ func GetEvent(c *gin.Context) {
 	}
 
 	// Get event
-	eventFromCal, err := u.Tx.Queries().GetEventOrResolve(userId, eventId, u.Context, u.Config)
+	hint, hintErr := parseEventResolveHint(c)
+	if hintErr != nil {
+		u.Error(hintErr)
+		return
+	}
+
+	eventFromCal, err := u.Tx.Queries().GetEventOrResolve(userId, eventId, hint, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -271,7 +317,13 @@ func PatchEvent(c *gin.Context) {
 		return
 	}
 
-	event, err := u.Tx.Queries().GetEventOrResolve(userId, eventId, u.Context, u.Config)
+	hint, hintErr := parseEventResolveHint(c)
+	if hintErr != nil {
+		u.Error(hintErr)
+		return
+	}
+
+	event, err := u.Tx.Queries().GetEventOrResolve(userId, eventId, hint, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
@@ -362,8 +414,14 @@ func DeleteEvent(c *gin.Context) {
 		return
 	}
 
+	hint, hintErr := parseEventResolveHint(c)
+	if hintErr != nil {
+		u.Error(hintErr)
+		return
+	}
+
 	// Get event first
-	event, err := u.Tx.Queries().GetEventOrResolve(userId, eventId, u.Context, u.Config)
+	event, err := u.Tx.Queries().GetEventOrResolve(userId, eventId, hint, u.Context, u.Config)
 	if err != nil {
 		u.Error(err)
 		return
