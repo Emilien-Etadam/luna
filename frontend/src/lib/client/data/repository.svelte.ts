@@ -761,7 +761,7 @@ export class Repository {
     });
 
     // remove from display
-    this.calendars.splice(this.calendars.findIndex((cal) => cal.id === id), 1);
+    this.compileCalendars();
     this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
 
     this.saveCache();
@@ -1095,7 +1095,7 @@ export class Repository {
     if (this.getMonthFromDate(modifiedEvent.date.start) <= this.eventsRangeEnd && this.getMonthFromDate(modifiedEvent.date.end) >= this.eventsRangeStart) {
       //this.events.update((events) => events.map((event) => event.id === modifiedEvent.id ? modifiedEvent : event));
     } else {
-      this.events.splice(this.events.findIndex((event) => event.id === modifiedEvent.id), 1);
+      this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
     }
 
     this.saveCache();
@@ -1129,7 +1129,7 @@ export class Repository {
     for (const month of months) this.removeEventFromCache(event, month);
 
     // remove from display
-    this.events.splice(this.events.findIndex((event) => event.id === id), 1);
+    this.compileEvents(this.eventsRangeStart, this.eventsRangeEnd);
 
     this.saveCache();
   }
