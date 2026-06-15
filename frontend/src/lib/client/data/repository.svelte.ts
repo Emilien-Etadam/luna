@@ -1070,7 +1070,8 @@ export class Repository {
     const formData = this.getEventFormData(modifiedEvent, changes);
     formData.set("overridden", override ? "true" : "false");
 
-    await fetchResponse(`/api/events/${modifiedEvent.id}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
+    const resolveQuery = this.getEventResolveQuery(modifiedEvent);
+    await fetchResponse(`/api/events/${modifiedEvent.id}?${resolveQuery}`, { method: "PATCH", body: formData }).catch((err) => { throw err; });
 
     // update in cache
     modifiedEvent.overridden = override;
@@ -1100,14 +1101,26 @@ export class Repository {
     this.saveCache();
   }
 
+  private getEventResolveQuery(event: EventModel): string {
+    const params = new URLSearchParams({
+      calendar: event.calendar,
+      start: event.date.start.toISOString(),
+      end: event.date.end.toISOString(),
+    });
+    return params.toString();
+  }
+
   async deleteEvent(id: string): Promise<void> {
     if (!browser) return;
     if (this.isPublicReadOnly()) return;
 
-    // remove from database
-    await fetchResponse(`/api/events/${id}`, { method: "DELETE" }).catch((err) => { throw err; });
-
     const event = this.eventsMap.get(id);
+
+    const resolveQuery = event ? `?${this.getEventResolveQuery(event)}` : "";
+
+    // remove from database
+    await fetchResponse(`/api/events/${id}${resolveQuery}`, { method: "DELETE" }).catch((err) => { throw err; });
+
     if (!event) return;
     this.eventsMap.delete(id);
 

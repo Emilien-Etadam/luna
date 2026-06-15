@@ -67,3 +67,11 @@ type DatabaseQueries interface {
 	SetEventOverrides(eventId ID, name string, desc string, color *Color) *errors.ErrorTrace
 	DeleteEventOverrides(eventId ID) *errors.ErrorTrace
 }
+
+// EventResolveHint narrows upstream event discovery to a single calendar and time range.
+type EventResolveHint struct {
+	CalendarId ID
+	Start      time.Time
+	End        time.Time
+	HasRange   bool
+}
