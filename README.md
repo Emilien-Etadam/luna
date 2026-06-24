@@ -8,6 +8,32 @@
 >
 > **EN** — Personal fork of [Opisek/luna](https://github.com/Opisek/luna), maintained by [Emilien-Etadam](https://github.com/Emilien-Etadam).
 
+## Différences avec l'upstream · Differences from upstream
+
+Ce fork avance sur le dépôt original avec des correctifs et des ajouts orientés usage personnel et auto-hébergement.
+
+This fork is ahead of the original repository with fixes and additions focused on personal self-hosted use.
+
+**Mode public / Public mode**
+- **FR** — Calendrier public agrégé (flux ICS + page `/public`), interface lecture seule sans connexion, fusion des doublons et affichage des participants.
+- **EN** — Aggregated public calendar (ICS feed + `/public` page), read-only UI without login, duplicate merging and participant display.
+
+**Interface / UI**
+- **FR** — Refonte visuelle (thème VS Code Dark+, `tokens.css`), vue agenda, événements multi-jours sur chaque jour, propriétaire du calendrier dans la fiche événement.
+- **EN** — Visual overhaul (VS Code Dark+ theme, `tokens.css`), agenda view, multi-day events on each day, calendar owner in event details.
+
+**CalDAV et backend / CalDAV & backend**
+- **FR** — Cache à la lecture, corrections des erreurs 500 (chargement parallèle, calendriers non mis en cache), assistant CalDAV amélioré, suppression d'événements plus fiable et rapide.
+- **EN** — Read-time caching, 500-error fixes (parallel loading, uncached calendars), improved CalDAV wizard, more reliable and faster event deletion.
+
+**Exploitation / Operations**
+- **FR** — Script `update` pour déploiement bare metal (pull, build, redémarrage systemd).
+- **EN** — `update` script for bare-metal deployment (pull, build, systemd restart).
+
+Les correctifs upstream sont réintégrés quand c'est possible. Ce fork n'est pas le dépôt officiel.
+
+Upstream fixes are merged back when possible. This fork is not the official repository.
+
 ## Démarrage rapide · Quick start (Docker)
 
 **Prérequis / Requirements :** `make`, `docker`, `docker compose`.
