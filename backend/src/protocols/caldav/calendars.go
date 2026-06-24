@@ -340,8 +340,9 @@ func setEventProps(cal *ical.Calendar, id string, name string, desc string, colo
 	event.Props.SetDateTime(ical.PropDateTimeStamp, timestamp)
 	//event.Props.SetDateTime(util.PropTimestamp, timestamp)
 
-	cal.Props.SetText(ical.PropProductID, "Luna")
-	cal.Props.SetText(ical.PropVersion, "0.1.0") // TODO: access version from CommonConfig
+	cal.Props.SetText(ical.PropProductID, "Luna 0.1.0") // TODO: take version from common config
+
+	cal.Props.SetText(ical.PropVersion, "2.0") // iCalendar version
 
 	return nil
 }
@@ -408,14 +409,14 @@ func (calendar *CaldavCalendar) EditEvent(originalEvent types.Event, name string
 	if err != nil {
 		return nil, errors.InterpretRemoteError(errors.New().AddErr(errors.LvlDebug, err), "calendar", "CalDAV calendar").
 			Append(errors.LvlWordy, "Could not get finished event").
-			Append(errors.LvlBroad, "Could not add event")
+			Append(errors.LvlBroad, "Could not edit event")
 	}
 
 	finishedEvent, tr := calendar.eventFromCaldav(obj, q)
 	if tr != nil {
 		return nil, tr.
 			Append(errors.LvlWordy, "Could not parse finished event").
-			Append(errors.LvlBroad, "Could not add event")
+			Append(errors.LvlBroad, "Could not edit event")
 	}
 
 	return finishedEvent, nil
