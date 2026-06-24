@@ -1,109 +1,58 @@
 # Luna
 
-A self-hosted calendar aggregator with a single, fast UI for every calendar you care about.
+**Français** — Agrégateur de calendriers auto-hébergé : une interface unique pour CalDAV, iCal et Google Calendar.
 
-![Luna in light and dark mode](./documentation/pictures/light-dark.png)
+**English** — Self-hosted calendar aggregator with a single UI for CalDAV, iCal, and Google Calendar.
 
-## What it does
+> **FR** — Fork personnel de [Opisek/luna](https://github.com/Opisek/luna), maintenu par [Emilien-Etadam](https://github.com/Emilien-Etadam).
+>
+> **EN** — Personal fork of [Opisek/luna](https://github.com/Opisek/luna), maintained by [Emilien-Etadam](https://github.com/Emilien-Etadam).
 
-- **One UI for every calendar.** Connect CalDAV servers (Nextcloud, Radicale, Baikal…), iCal feeds, and Google Calendar — Luna shows them side by side.
-- **Multi-user.** Per-user accounts, sources, calendars, and preferences. Designed for self-hosting on a home server or VPS.
-- **Public read-only mode.** Expose a curated view of your calendars to unauthenticated visitors without giving them write access.
-- **Month and agenda views.** Navigate by month, week, day, or jump straight to a chronological agenda anchored on today.
-- **VS Code Dark+ theme out of the box.** Tokens-driven design system in `frontend/static/theme/tokens.css`; a light theme is available with the same token names. Additional themes ship in `frontend/static/themes/`.
-- **Sensible defaults, no fluff.** No shadows, no decorative animations, transitions capped at 100 ms, padding on a 4 px grid.
+## Démarrage rapide · Quick start (Docker)
 
-## Architecture
-
-| Component | Stack | Notes |
-|-----------|-------|-------|
-| `frontend/` | SvelteKit 2 + Svelte 5 (runes), Vite, Bun runtime | Served by `svelte-adapter-bun` |
-| `backend/`  | Go (`luna-backend`) | REST API, CalDAV/iCal/Google adapters, task scheduler |
-| Database    | PostgreSQL 16 | Stores users, sources, calendars, cached events |
-
-The frontend talks to the backend over HTTP. In public read-only mode, the SvelteKit hooks bypass `/login` redirects and route data fetching to `/api/public/*` endpoints exposed by the backend.
-
-## Quick start (Docker)
-
-Requirements: `make`, `docker`, `docker compose`.
+**Prérequis / Requirements :** `make`, `docker`, `docker compose`.
 
 ```bash
 git clone https://github.com/Emilien-Etadam/luna.git
 cd luna
-# Edit docker-compose.yml: set PUBLIC_URL, DB_PASSWORD, etc.
+# FR : adapter PUBLIC_URL et les mots de passe dans docker-compose.yml
+# EN : set PUBLIC_URL and passwords in docker-compose.yml
 make run
 ```
 
-`make` targets:
+**FR** — Interface sur le port **8080**. Données persistantes : `/srv/luna/data` (backend), `/srv/luna/postgres` (base).
 
-- `make run` — build and start the stack in detached mode (`docker compose up -d --build`)
-- `make up` — start without rebuilding
-- `make down` — stop the stack
-- `make restart` — restart containers
-- `make build` — rebuild images with `--no-cache`
-- `make purge` — stop the stack and **wipe** the Postgres volume at `/srv/luna/postgres`
+**EN** — UI on port **8080**. Persistent data: `/srv/luna/data` (backend), `/srv/luna/postgres` (database).
 
-The default frontend port is `8080`. Persistent data lives in `/srv/luna/data` (backend) and `/srv/luna/postgres` (database) on the host.
+| Commande / Command | Action |
+|--------------------|--------|
+| `make run` | Build et démarrage / Build and start |
+| `make up` / `make down` | Démarrer / arrêter · Start / stop |
+| `make restart` | Redémarrer · Restart |
+| `make build` | Rebuild sans cache · Rebuild without cache |
+| `make purge` | Arrêter et **effacer** le volume Postgres · Stop and **wipe** the Postgres volume |
 
-A working `docker-compose.yml` is provided at the repository root; copy and adapt it before going to production.
+## Mise à jour · Update (bare metal)
 
-## Local development
+**FR** — Pour un déploiement hors Docker avec services systemd :
 
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev      # vite dev server
-npm run check    # svelte-kit sync + svelte-check
-npm run build    # production build (svelte-adapter-bun)
-```
-
-### Backend
+**EN** — For non-Docker deployments using systemd services:
 
 ```bash
-cd backend/src
-go build ./...
-go run ./luna-backend
+./scripts/install-update-command.sh   # installe / installs the `update` command
+update                                # pull, build backend + frontend, redémarrage / restart
 ```
 
-The backend reads its configuration from environment variables (see `docker-compose.yml` for the full list).
-
-## Theming
-
-All colors, typography, spacing, radii, and scrollbar styling are centralised in [`frontend/static/theme/tokens.css`](./frontend/static/theme/tokens.css). Components consume CSS variables (`--bg-editor`, `--fg-primary`, `--border-default`, `--accent-blue`…) — no hardcoded hex values outside that file.
-
-To create a new theme:
-
-1. Duplicate `tokens.css` and override the variables under your own `html[data-theme="..."]` selector.
-2. Drop additional theme stylesheets into `frontend/static/themes/`.
-
-Further details: [`documentation/themes.md`](./documentation/themes.md).
-
-## Project layout
-
-```
-.
-├── backend/         Go API server (CalDAV, iCal, Google, auth, DB)
-├── frontend/        SvelteKit app (UI, routing, theming)
-├── documentation/   Deployment, security, API, theming, contribution
-├── scripts/         Helper scripts
-├── docker-compose.yml
-└── Makefile
-```
+Variables utiles / Useful variables : `LUNA_REPO_DIR`, `API_HEALTH_URL`, `RESTART_PROXY=1`.
 
 ## Documentation
 
-- [Deployment guide](./documentation/deployment.md)
-- [API reference](./documentation/api.md)
-- [Security & privacy](./documentation/security.md)
-- [Theming](./documentation/themes.md)
-- [Contribution guide](./documentation/contribution.md)
+- [Déploiement / Deployment](./documentation/deployment.md)
+- [API](./documentation/api.md)
+- [Sécurité / Security](./documentation/security.md)
 
-## Status
+## Licence / License
 
-Luna is approaching a `1.0.0` release. Until then expect occasional breaking changes — back up your calendars before updating and be prepared to wipe the database between major versions. Track progress on the [development roadmap](https://todo.opisek.net/share/dvEazOyRLEYThqxohVosnqKskYLyoZ4nS8rQ63G1/auth?view=280).
+**FR** — Projet upstream : copyright © 2026 Kacper Darowski (Opisek) et contributeurs. Licence à définir côté upstream.
 
-## License
-
-To be defined. Copyright © 2026 Kacper Darowski (Opisek) and contributors.
+**EN** — Upstream project: copyright © 2026 Kacper Darowski (Opisek) and contributors. License to be defined upstream.
