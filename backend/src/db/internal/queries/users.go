@@ -134,6 +134,111 @@ func (q *Queries) IsAdmin(userId types.ID) (bool, *errors.ErrorTrace) {
 	}
 }
 
+func (q *Queries) GetUserAccountByUsername(username string) (*types.UserAccount, *errors.ErrorTrace) {
+	account := &types.UserAccount{}
+
+	err := q.Tx.QueryRow(
+		q.Context,
+		`
+		SELECT id, username, email, admin, enabled
+		FROM users
+		WHERE username = $1;
+		`,
+		username,
+	).Scan(&account.Id, &account.Username, &account.Email, &account.Admin, &account.Enabled)
+
+	switch err {
+	case nil:
+		return account, nil
+	case pgx.ErrNoRows:
+		return nil, errors.New().Status(http.StatusNotFound).
+			Append(errors.LvlPlain, "User %v does not exist", username)
+	default:
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not get user with username %v", username).
+			AltStr(errors.LvlPlain, "Database error")
+	}
+}
+
+func (q *Queries) ListUserAccounts() ([]*types.UserAccount, *errors.ErrorTrace) {
+	rows, err := q.Tx.Query(
+		q.Context,
+		`
+		SELECT id, username, email, admin, enabled
+		FROM users
+		ORDER BY created_at ASC;
+		`,
+	)
+	if err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not list users").
+			AltStr(errors.LvlPlain, "Database error")
+	}
+	defer rows.Close()
+
+	accounts := make([]*types.UserAccount, 0)
+	for rows.Next() {
+		account := &types.UserAccount{}
+		err = rows.Scan(&account.Id, &account.Username, &account.Email, &account.Admin, &account.Enabled)
+		if err != nil {
+			return nil, errors.New().Status(http.StatusInternalServerError).
+				AddErr(errors.LvlDebug, err).
+				Append(errors.LvlDebug, "Could not list users").
+				AltStr(errors.LvlPlain, "Database error")
+		}
+		accounts = append(accounts, account)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not list users").
+			AltStr(errors.LvlPlain, "Database error")
+	}
+
+	return accounts, nil
+}
+
+func (q *Queries) PromoteUserToAdmin(userId types.ID) *errors.ErrorTrace {
+	_, err := q.Tx.Exec(
+		q.Context,
+		`
+		UPDATE users
+		SET admin = TRUE, enabled = TRUE
+		WHERE id = $1;
+		`,
+		userId.UUID(),
+	)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not promote user %v to administrator", userId).
+			AltStr(errors.LvlPlain, "Database error")
+	}
+	return nil
+}
+
+func (q *Queries) ForceEnableUser(userId types.ID) *errors.ErrorTrace {
+	_, err := q.Tx.Exec(
+		q.Context,
+		`
+		UPDATE users
+		SET enabled = TRUE
+		WHERE id = $1;
+		`,
+		userId.UUID(),
+	)
+	if err != nil {
+		return errors.New().Status(http.StatusInternalServerError).
+			AddErr(errors.LvlDebug, err).
+			Append(errors.LvlDebug, "Could not enable user %v", userId).
+			AltStr(errors.LvlPlain, "Database error")
+	}
+	return nil
+}
+
 func (q *Queries) AnyUsersExist() (bool, *errors.ErrorTrace) {
 	// TODO: rewrite with EXISTS?
 	rows, err := q.Tx.Query(

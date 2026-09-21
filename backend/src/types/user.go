@@ -34,6 +34,15 @@ type StrippedUser struct {
 	EffectiveProfilePictureUrl *Url   `json:"profile_picture"`
 }
 
+// UserAccount is a compact user record for operator tooling (CLI).
+type UserAccount struct {
+	Id       ID
+	Username string
+	Email    string
+	Admin    bool
+	Enabled  bool
+}
+
 // Profile picture types:
 // - Remote: Set url to the remote url and file to the cached file id.
 // - Database: Set url to nil and file to the database file id.

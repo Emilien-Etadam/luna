@@ -36,6 +36,18 @@ func GenerateSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byt
 	return secret, nil
 }
 
+func SymmetricKeyFileExists(commonConfig *config.CommonConfig, name string) (bool, error) {
+	path := fmt.Sprintf("%s/%s.key", commonConfig.Env.GetKeysPath(), name)
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
 func GetSymmetricKey(commonConfig *config.CommonConfig, name string) ([]byte, *errors.ErrorTrace) {
 	path := fmt.Sprintf("%s/%s.key", commonConfig.Env.GetKeysPath(), name)
 

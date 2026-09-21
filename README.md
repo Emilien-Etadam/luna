@@ -27,8 +27,8 @@ This fork is ahead of the original repository with fixes and additions focused o
 - **EN** — Read-time caching, 500-error fixes (parallel loading, uncached calendars), improved CalDAV wizard, more reliable and faster event deletion.
 
 **Exploitation / Operations**
-- **FR** — Script `update` pour déploiement bare metal (pull, build, redémarrage systemd).
-- **EN** — `update` script for bare-metal deployment (pull, build, systemd restart).
+- **FR** — Script `update` pour déploiement bare metal (pull, build, redémarrage systemd). Mot de passe admin perdu : `luna-backend users` puis `luna-backend reset-password` (voir [déploiement](./documentation/deployment.md)).
+- **EN** — `update` script for bare-metal deployment (pull, build, systemd restart). Lost admin password: `luna-backend users` then `luna-backend reset-password` (see [deployment](./documentation/deployment.md)).
 
 Les correctifs upstream sont réintégrés quand c'est possible. Ce fork n'est pas le dépôt officiel.
 

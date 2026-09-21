@@ -2,12 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"luna-backend/api"
 	"luna-backend/cache"
+	"luna-backend/cli"
 	"luna-backend/config"
 	"luna-backend/db"
-	"luna-backend/errors"
+	lunaerrors "luna-backend/errors"
 	"luna-backend/log"
 	"luna-backend/parsing"
 	"luna-backend/services"
@@ -28,16 +30,16 @@ func setupDirs(env *config.Environmental) error {
 	return fmt.Errorf("could not create %v directory: %v", env.GetKeysPath(), err)
 }
 
-func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *errors.ErrorTrace) {
+func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *lunaerrors.ErrorTrace) {
 	var err error
 	logger := log.NewLogger()
 	mainLogger := logger.WithField("module", "main")
 
 	env, err := config.ParseEnvironmental(mainLogger)
 	if err != nil {
-		return logger, mainLogger, nil, errors.New().
-			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not parse environmental variables")
+		return logger, mainLogger, nil, lunaerrors.New().
+			AddErr(lunaerrors.LvlDebug, err).
+			Append(lunaerrors.LvlDebug, "Could not parse environmental variables")
 	}
 
 	commonConfig := &config.CommonConfig{
@@ -46,16 +48,16 @@ func setupConfig() (*logrus.Logger, *logrus.Entry, *config.CommonConfig, *errors
 	}
 	commonConfig.Version, err = types.ParseVersion(version)
 	if err != nil {
-		return logger, mainLogger, nil, errors.New().
-			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not parse binary version %v", version)
+		return logger, mainLogger, nil, lunaerrors.New().
+			AddErr(lunaerrors.LvlDebug, err).
+			Append(lunaerrors.LvlDebug, "Could not parse binary version %v", version)
 	}
 	commonConfig.PublicUrl = (*types.Url)(&env.PUBLIC_URL)
 
 	return logger, mainLogger, commonConfig, nil
 }
 
-func setupDb(commonConfig *config.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, *errors.ErrorTrace) {
+func setupDb(commonConfig *config.CommonConfig, mainLogger *logrus.Entry, dbLogger *logrus.Entry) (*db.Database, *lunaerrors.ErrorTrace) {
 	env := commonConfig.Env
 	db := db.NewDatabase(env.DB_URL, env.DB_HOST, env.DB_PORT, env.DB_USERNAME, env.DB_PASSWORD, env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
 
@@ -69,25 +71,25 @@ func setupDb(commonConfig *config.CommonConfig, mainLogger *logrus.Entry, dbLogg
 	defer func() {
 		rollbackErr := tx.Rollback(mainLogger)
 		if rollbackErr != nil {
-			mainLogger.Error(rollbackErr.Serialize(errors.LvlDebug))
+			mainLogger.Error(rollbackErr.Serialize(lunaerrors.LvlDebug))
 		}
 	}()
 
 	// Verify version integrity
 	err := tx.Tables().InitializeVersionTable()
 	if err != nil {
-		return nil, errors.New().
-			AddErr(errors.LvlDebug, err).
-			Append(errors.LvlDebug, "Could not initialize version table")
+		return nil, lunaerrors.New().
+			AddErr(lunaerrors.LvlDebug, err).
+			Append(lunaerrors.LvlDebug, "Could not initialize version table")
 	}
 	latestUsedVersion, tr := tx.Queries().GetLatestVersion()
 	if tr != nil {
 		return nil, tr
 	}
 	if latestUsedVersion.IsGreaterThan(&commonConfig.Version) {
-		tr := errors.New().
-			Append(errors.LvlDebug, "Database version %v is greater than binary version %v", latestUsedVersion.String(), commonConfig.Version.String()).
-			Append(errors.LvlDebug, "Downgrades are not supported")
+		tr := lunaerrors.New().
+			Append(lunaerrors.LvlDebug, "Database version %v is greater than binary version %v", latestUsedVersion.String(), commonConfig.Version.String()).
+			Append(lunaerrors.LvlDebug, "Downgrades are not supported")
 		return nil, tr
 	}
 
@@ -112,7 +114,7 @@ func setupDb(commonConfig *config.CommonConfig, mainLogger *logrus.Entry, dbLogg
 	return db, tx.Commit(mainLogger)
 }
 
-func createTask(name string, task func(*db.Transaction, *logrus.Entry, *config.CommonConfig) *errors.ErrorTrace, db *db.Database, cronLogger *logrus.Entry, config *config.CommonConfig) func() {
+func createTask(name string, task func(*db.Transaction, *logrus.Entry, *config.CommonConfig) *lunaerrors.ErrorTrace, db *db.Database, cronLogger *logrus.Entry, config *config.CommonConfig) func() {
 	return func() {
 		cronLogger.Infof("running cron task %v", name)
 
@@ -128,7 +130,7 @@ func createTask(name string, task func(*db.Transaction, *logrus.Entry, *config.C
 
 		err = task(tx, cronLogger.WithField("task", name), config)
 		if err != nil {
-			cronLogger.Errorf("failure running cron task %v: %v", name, err.Serialize(errors.LvlDebug))
+			cronLogger.Errorf("failure running cron task %v: %v", name, err.Serialize(lunaerrors.LvlDebug))
 			return
 		}
 
@@ -151,10 +153,38 @@ func startGoroutine(f func(), wg *sync.WaitGroup) {
 }
 
 func main() {
+	cliErr := cli.MaybeRun(os.Args[1:], openCliRuntime)
+	if cliErr == nil {
+		return
+	}
+	if !errors.Is(cliErr, cli.ErrNotCLI) {
+		fmt.Fprintln(os.Stderr, cliErr)
+		os.Exit(1)
+	}
+
+	startServer()
+}
+
+func openCliRuntime() (*cli.Runtime, error) {
+	logger, mainLogger, commonConfig, tr := setupConfig()
+	if tr != nil {
+		return nil, fmt.Errorf("%s", tr.Serialize(lunaerrors.LvlDebug))
+	}
+
+	dbLogger := logger.WithField("module", "database")
+	database := db.NewDatabase(commonConfig.Env.DB_URL, commonConfig.Env.DB_HOST, commonConfig.Env.DB_PORT, commonConfig.Env.DB_USERNAME, commonConfig.Env.DB_PASSWORD, commonConfig.Env.DB_DATABASE, commonConfig, parsing.GetPrimitivesParser(), dbLogger)
+	return &cli.Runtime{
+		Config: commonConfig,
+		DB:     database,
+		Logger: mainLogger,
+	}, nil
+}
+
+func startServer() {
 	// Config
 	logger, mainLogger, commonConfig, err := setupConfig()
 	if err != nil {
-		mainLogger.Errorf("could not set up config: %v", err.Serialize(errors.LvlDebug))
+		mainLogger.Errorf("could not set up config: %v", err.Serialize(lunaerrors.LvlDebug))
 		os.Exit(1)
 	}
 
@@ -171,12 +201,12 @@ func main() {
 			dbReady = true
 			break
 		}
-		mainLogger.Warnf("could not set up database: %v", err.Serialize(errors.LvlDebug))
+		mainLogger.Warnf("could not set up database: %v", err.Serialize(lunaerrors.LvlDebug))
 		mainLogger.Warn("retrying in 5 seconds...")
 		time.Sleep(5 * time.Second)
 	}
 	if !dbReady {
-		mainLogger.Errorf("could not set up database after 5 attempts: %v", err.Serialize(errors.LvlDebug))
+		mainLogger.Errorf("could not set up database after 5 attempts: %v", err.Serialize(lunaerrors.LvlDebug))
 		os.Exit(1)
 	}
 

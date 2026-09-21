@@ -75,6 +75,36 @@ For the frontend, create an `.env` file in the `frontend` directory inside the r
 
 If you want to build the frontend instead, run `make build` inside the `frontend` directory. To start the compiled frontend, run `bun run ./build/index.js`
 
+## Lost admin password · Mot de passe administrateur perdu
+
+**EN** — Passwords cannot be retrieved. The backend binary can list accounts and set a new password. Run it with the same environment as the running backend (`DATA_PATH` / keys, Postgres). This invalidates every session for that user.
+
+**FR** — Le mot de passe d'origine ne peut pas être retrouvé. Le binaire backend peut lister les comptes et en définir un nouveau. Exécute-le avec le même environnement que le backend (`DATA_PATH` / clés, Postgres). Toutes les sessions de ce compte sont invalidées.
+
+Docker:
+
+```bash
+docker exec -it luna-backend ./luna-backend users
+docker exec -it luna-backend ./luna-backend reset-password YOUR_USERNAME
+# optional, if no account is administrator:
+docker exec -it luna-backend ./luna-backend promote-admin YOUR_USERNAME
+```
+
+Without a TTY:
+
+```bash
+docker exec -e LUNA_NEW_PASSWORD='your-new-password' luna-backend ./luna-backend reset-password YOUR_USERNAME
+```
+
+Bare metal — from `backend/src` (where `.env` lives), or with the systemd environment:
+
+```bash
+./luna-backend users
+./luna-backend reset-password YOUR_USERNAME
+```
+
+`luna-backend help` prints the full operator usage.
+
 ## Reverse Proxy
 Make sure to put Luna behind a reverse proxy with configured TLS.
 
