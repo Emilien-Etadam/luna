@@ -26,8 +26,8 @@ func IsValidUsername(username string) error {
 }
 
 func IsValidPassword(password string) error {
-	if len(password) < 8 {
-		return errors.New("password must be at least 8 characters long")
+	if len(password) < 6 {
+		return errors.New("password must be at least 6 characters long")
 	}
 	if len(password) > 1000 {
 		return errors.New("password must be at most 1000 characters long")

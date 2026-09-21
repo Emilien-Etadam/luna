@@ -125,8 +125,8 @@ func getenvLookup(getenv func(string) string, key string) (string, bool) {
 }
 
 func validatePassword(password string) error {
-	if len(password) < 8 {
-		return fmt.Errorf("le mot de passe doit faire au moins 8 caractères")
+	if len(password) < 6 {
+		return fmt.Errorf("le mot de passe doit faire au moins 6 caractères")
 	}
 	if len(password) > 1000 {
 		return fmt.Errorf("le mot de passe doit faire au plus 1000 caractères")

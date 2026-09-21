@@ -141,10 +141,10 @@ func TestUsageMentionsReset(t *testing.T) {
 }
 
 func TestValidatePassword(t *testing.T) {
-	if err := validatePassword("short"); err == nil {
-		t.Fatal("expected error for short password")
+	if err := validatePassword("12345"); err == nil {
+		t.Fatal("expected error for 5-character password")
 	}
-	if err := validatePassword("long-enough-password"); err != nil {
+	if err := validatePassword("123456"); err != nil {
 		t.Fatal(err)
 	}
 }
